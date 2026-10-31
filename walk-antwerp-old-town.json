@@ -1,0 +1,148 @@
+{
+  "schema": 2,
+  "id": "old-town",
+  "title": "Old Antwerp",
+  "subtitle": "From Central Station to Het Steen",
+  "description": "From the 'railway cathedral' past the Rubens House, the Baroque Conscience square, the Cathedral of Our Lady and the Plantin-Moretus Museum to the Grote Markt and the river. Texts and photos come from Wikipedia.",
+  "lang": "en",
+  "stops": [
+    {
+      "id": "centraal",
+      "title": "Antwerp Central Station",
+      "lat": 51.2172,
+      "lon": 4.4211,
+      "wiki": [
+        "antwerpen-centraal",
+        "antwerp central",
+        "antwerpen centraal"
+      ]
+    },
+    {
+      "id": "rubenshuis",
+      "title": "Rubens House",
+      "lat": 51.2175,
+      "lon": 4.4103,
+      "wiki": [
+        "rubenshuis",
+        "rubens house"
+      ]
+    },
+    {
+      "id": "conscienceplein",
+      "title": "Hendrik Conscienceplein",
+      "lat": 51.2209,
+      "lon": 4.4068,
+      "wiki": [
+        "conscienceplein"
+      ]
+    },
+    {
+      "id": "borromeus",
+      "title": "St. Charles Borromeo Church",
+      "lat": 51.221,
+      "lon": 4.4062,
+      "wiki": [
+        "borromeus",
+        "borromeo"
+      ]
+    },
+    {
+      "id": "vlaeykensgang",
+      "title": "Vlaeykensgang",
+      "lat": 51.2199,
+      "lon": 4.4026,
+      "wiki": [
+        "vlaeykensgang"
+      ]
+    },
+    {
+      "id": "kathedraal",
+      "title": "Cathedral of Our Lady",
+      "lat": 51.2203,
+      "lon": 4.4013,
+      "wiki": [
+        "onze-lieve-vrouwekathedraal",
+        "cathedral of our lady",
+        "notre-dame d'anvers"
+      ]
+    },
+    {
+      "id": "groenplaats",
+      "title": "Groenplaats",
+      "lat": 51.219,
+      "lon": 4.401,
+      "wiki": [
+        "groenplaats"
+      ]
+    },
+    {
+      "id": "plantin",
+      "title": "Plantin-Moretus Museum",
+      "lat": 51.2183,
+      "lon": 4.3982,
+      "wiki": [
+        "plantin"
+      ]
+    },
+    {
+      "id": "grote-markt",
+      "title": "Grote Markt",
+      "lat": 51.2213,
+      "lon": 4.3997,
+      "wiki": [
+        "grote markt"
+      ]
+    },
+    {
+      "id": "brabo",
+      "title": "Brabo Fountain",
+      "lat": 51.2212,
+      "lon": 4.3995,
+      "wiki": [
+        "brabo"
+      ]
+    },
+    {
+      "id": "stadhuis",
+      "title": "Antwerp City Hall",
+      "lat": 51.2211,
+      "lon": 4.3993,
+      "wiki": [
+        "stadhuis van antwerpen",
+        "antwerp city hall",
+        "city hall",
+        "hotel de ville d'anvers"
+      ]
+    },
+    {
+      "id": "vleeshuis",
+      "title": "Vleeshuis",
+      "lat": 51.2232,
+      "lon": 4.3999,
+      "wiki": [
+        "vleeshuis"
+      ]
+    },
+    {
+      "id": "paulus",
+      "title": "St. Paul's Church",
+      "lat": 51.2238,
+      "lon": 4.4014,
+      "wiki": [
+        "sint-pauluskerk",
+        "st. paul",
+        "saint-paul"
+      ]
+    },
+    {
+      "id": "steen",
+      "title": "Het Steen",
+      "lat": 51.2227,
+      "lon": 4.3974,
+      "wiki": [
+        "het steen",
+        "steen (anvers)"
+      ]
+    }
+  ]
+}

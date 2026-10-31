@@ -1,0 +1,21 @@
+{
+  "schema": 2,
+  "id": "street-art",
+  "title": "Street art in Antwerp",
+  "subtitle": "Murals and graffiti mapped on OpenStreetMap",
+  "description": "Murals and graffiti within 2 km of the centre, as mapped by OpenStreetMap volunteers, in a walkable order.",
+  "lang": "en",
+  "generator": {
+    "type": "osm-art",
+    "center": [
+      51.215,
+      4.408
+    ],
+    "radiusKm": 2.0,
+    "limit": 20,
+    "artworkTypes": [
+      "mural",
+      "graffiti"
+    ]
+  }
+}

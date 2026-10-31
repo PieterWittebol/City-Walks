@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https://tile.openstreetmap.org https://upload.wikimedia.org; connect-src 'self' https://api.github.com https://*.wikipedia.org https://nominatim.openstreetmap.org; font-src 'self'; manifest-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>City Walks · Editor</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="leaflet.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="locked">
+
+<header id="bar">
+  <button id="btnBack" class="icon hidden" aria-label="Back">‹</button>
+  <div id="barTitle">City Walks · Editor</div>
+  <span id="dirty" class="hidden">unsaved</span>
+  <button id="btnSignOut" class="out hidden">Sign out</button>
+</header>
+
+<!-- 1. Sign in -->
+<main id="vLogin" class="view">
+  <section class="card">
+    <h1>Editor</h1>
+    <p>Changes are saved straight to your GitHub repository. To sign in you need a <b>fine-grained personal access token</b> that can only edit this one repository.</p>
+    <label>Repository <span class="small">(owner/name)</span><input id="inRepo" autocomplete="off" spellcheck="false" placeholder="owner/repository"></label>
+    <label>Token<input id="inToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+    <label class="chk"><input type="checkbox" id="inRemember"> Remember on this device</label>
+    <p id="rememberWarn" class="warn hidden">The token is then kept in this browser's storage, which every site under the same github.io address can read. Only use this on your own device and if you don't publish other sites with third-party scripts under this GitHub account.</p>
+    <button id="btnLogin" class="primary">Sign in</button>
+    <p id="loginMsg" class="msg"></p>
+    <details>
+      <summary>How to create the token (2 minutes)</summary>
+      <ol>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
+        <li>Name: <i>City Walks editor</i>. Expiration: <b>30 days</b> or less.</li>
+        <li>Repository access: <b>Only select repositories</b> → this repository.</li>
+        <li>Repository permissions → <b>Contents: Read and write</b>. Nothing else.</li>
+        <li>Generate, copy and paste it above. GitHub only shows it once; just make a new one when it expires.</li>
+      </ol>
+      <p class="small">The token never leaves your browser except to talk to api.github.com. This editor can only change <code>cities.json</code> and <code>walk-*.json</code>, never the app's code.</p>
+    </details>
+  </section>
+</main>
+
+<!-- 2. Cities and walks -->
+<main id="vHome" class="view hidden">
+  <div id="tokenInfo" class="note"></div>
+  <div id="cities"></div>
+  <div class="row">
+    <button id="btnAddCity">＋ City</button>
+    <button id="btnSaveCities" class="primary" disabled>Save list</button>
+  </div>
+  <p class="small">The list (cities, walk order, titles) is stored in <code>cities.json</code>. <a href="./" target="_blank" rel="noopener">Open the app ›</a></p>
+</main>
+
+<!-- 3. One walk -->
+<main id="vWalk" class="view hidden">
+  <div id="map"></div>
+  <div class="tabs">
+    <button data-tab="tStops" class="sel">Stops</button>
+    <button data-tab="tGen">Generator</button>
+    <button data-tab="tDetails">Details</button>
+  </div>
+
+  <section id="tStops" class="tab">
+    <ol id="stopList"></ol>
+    <div class="row">
+      <button id="btnAddTap">＋ Tap on map</button>
+      <button id="btnAddWiki">＋ Nearby Wikipedia</button>
+      <button id="btnAddSearch">＋ Search</button>
+    </div>
+    <p class="small">Drag a pin to move a stop: it is then marked "exact position" so the app won't move it.</p>
+  </section>
+
+  <section id="tGen" class="tab hidden">
+    <p class="small">A generated walk has no fixed stops: the app picks places from open data around a centre point. Drag the centre pin to move it.</p>
+    <label>Type<select id="gType"><option value="">— none (hand-picked stops) —</option><option value="wikidata">Highlights from Wikidata</option><option value="osm-art">Street art from OpenStreetMap</option><option value="ods">City open data portal</option></select></label>
+    <div id="gFields">
+      <label>Radius (km)<input id="gRadius" type="number" min="0.1" max="3" step="0.1"></label>
+      <label>Maximum number of stops<input id="gLimit" type="number" min="3" max="80" step="1"></label>
+      <label class="gw">Minimum Wikipedia languages (popularity)<input id="gMin" type="number" min="0" max="100" step="1"></label>
+      <label class="gw">Exclude Wikidata items <span class="small">(Q-ids, comma separated)</span><input id="gExclude" spellcheck="false"></label>
+      <label class="go">Artwork types<input id="gArt" spellcheck="false" placeholder="mural, graffiti"></label>
+      <label class="gd">Portal<select id="gHost"></select></label>
+      <label class="gd">Dataset id<input id="gDataset" spellcheck="false"></label>
+    </div>
+  </section>
+
+  <section id="tDetails" class="tab hidden">
+    <label>Title<input id="wTitle" maxlength="120"></label>
+    <label>Subtitle<input id="wSubtitle" maxlength="120"></label>
+    <label>Description<textarea id="wDesc" rows="4" maxlength="1000"></textarea></label>
+    <label>Kind<select id="wKind"><option value="">—</option><option value="comics">Comic strips</option><option value="street-art">Street art</option><option value="heritage">Heritage</option><option value="highlights">Highlights</option></select></label>
+    <label>Language of own texts<select id="wLang"><option value="en">English</option><option value="nl">Nederlands</option><option value="fr">Français</option><option value="de">Deutsch</option></select></label>
+    <p class="small">File: <code id="wFile"></code></p>
+    <button id="btnDeleteWalk" class="danger">Delete this walk</button>
+  </section>
+
+  <div class="savebar">
+    <a id="lnkView" class="small" target="_blank" rel="noopener">View in app ›</a>
+    <button id="btnSaveWalk" class="primary">Save walk</button>
+  </div>
+</main>
+
+<!-- stop editor -->
+<div id="stopForm" class="sheet hidden">
+  <div class="card">
+    <h2 id="sfHead">Stop</h2>
+    <label>Title<input id="sTitle" maxlength="120"></label>
+    <div class="two"><label>Latitude<input id="sLat" type="number" step="0.00001"></label><label>Longitude<input id="sLon" type="number" step="0.00001"></label></div>
+    <label class="chk"><input type="checkbox" id="sFixed"> Exact position (don't let the app move it)</label>
+    <label>Wikipedia keywords <span class="small">(comma separated; finds the article near this point)</span><input id="sWiki" spellcheck="false"></label>
+    <label>Text <span class="small">(empty = use the Wikipedia summary)</span><textarea id="sText" rows="6" maxlength="3000"></textarea></label>
+    <div class="two"><label>Artist<input id="sArtist" maxlength="120"></label><label>Year<input id="sYear" maxlength="20"></label></div>
+    <label>Address<input id="sAddress" maxlength="160"></label>
+    <label>Mural match words <span class="small">(comma separated)</span><input id="sMatch" spellcheck="false"></label>
+    <div class="two">
+      <label>Type<select id="sType"><option value="">—</option><option value="mural">Mural</option><option value="statue">Statue</option></select></label>
+      <label>Id<input id="sId" spellcheck="false" maxlength="60"></label>
+    </div>
+    <label>Image <span class="small">(file in the repository or upload.wikimedia.org link)</span><input id="sImage" spellcheck="false"></label>
+    <p id="sfMsg" class="msg"></p>
+    <div class="row"><button id="sfDelete" class="danger">Delete</button><button id="sfCancel">Cancel</button><button id="sfOk" class="primary">Done</button></div>
+  </div>
+</div>
+
+<!-- generic dialog -->
+<div id="dlg" class="sheet hidden">
+  <div class="card">
+    <h2 id="dlgTitle"></h2>
+    <div id="dlgBody"></div>
+    <p id="dlgMsg" class="msg"></p>
+    <div class="row" id="dlgButtons"></div>
+  </div>
+</div>
+
+<div id="toast" class="hidden" role="status"></div>
+
+<script src="leaflet.js"></script>
+<script src="util.js"></script>
+<script src="sources.js"></script>
+<script src="schema.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

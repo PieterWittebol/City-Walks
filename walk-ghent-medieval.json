@@ -1,0 +1,135 @@
+{
+  "schema": 2,
+  "id": "medieval",
+  "title": "Medieval Ghent",
+  "subtitle": "Cathedral, belfry, castle and the old harbour",
+  "description": "A loop through the historic heart of Ghent: St Bavo's, the Belfry, the Friday Market, the Patershol, the Castle of the Counts and the Graslei and Korenlei quays. Texts and photos come from Wikipedia, in the language you choose.",
+  "lang": "en",
+  "stops": [
+    {
+      "id": "sint-baafs",
+      "title": "St Bavo's Cathedral",
+      "lat": 51.053,
+      "lon": 3.7267,
+      "wiki": [
+        "baafs",
+        "bavo"
+      ]
+    },
+    {
+      "id": "belfort",
+      "title": "Belfry of Ghent",
+      "lat": 51.0537,
+      "lon": 3.7248,
+      "wiki": [
+        "belfort",
+        "belfry"
+      ]
+    },
+    {
+      "id": "stadhuis",
+      "title": "City Hall",
+      "lat": 51.0545,
+      "lon": 3.7251,
+      "wiki": [
+        "stadhuis van gent",
+        "city hall",
+        "stadhuis"
+      ]
+    },
+    {
+      "id": "werregaren",
+      "title": "Werregarenstraat (graffiti street)",
+      "lat": 51.0549,
+      "lon": 3.7259,
+      "wiki": [
+        "werregaren"
+      ]
+    },
+    {
+      "id": "dulle-griet",
+      "title": "Dulle Griet",
+      "lat": 51.0566,
+      "lon": 3.7253,
+      "wiki": [
+        "dulle griet",
+        "groot kanon"
+      ]
+    },
+    {
+      "id": "vrijdagmarkt",
+      "title": "Vrijdagmarkt",
+      "lat": 51.0571,
+      "lon": 3.7265,
+      "wiki": [
+        "vrijdagmarkt"
+      ]
+    },
+    {
+      "id": "patershol",
+      "title": "Patershol",
+      "lat": 51.0588,
+      "lon": 3.7228,
+      "wiki": [
+        "patershol"
+      ]
+    },
+    {
+      "id": "gravensteen",
+      "title": "Gravensteen",
+      "lat": 51.0573,
+      "lon": 3.7206,
+      "wiki": [
+        "gravensteen"
+      ]
+    },
+    {
+      "id": "korenlei",
+      "title": "Korenlei",
+      "lat": 51.0553,
+      "lon": 3.7203,
+      "wiki": [
+        "korenlei"
+      ]
+    },
+    {
+      "id": "michielsbrug",
+      "title": "St Michael's Bridge",
+      "lat": 51.0539,
+      "lon": 3.7195,
+      "wiki": [
+        "michielsbrug",
+        "michael's bridge",
+        "michaels bridge"
+      ]
+    },
+    {
+      "id": "graslei",
+      "title": "Graslei",
+      "lat": 51.0553,
+      "lon": 3.7211,
+      "wiki": [
+        "graslei"
+      ]
+    },
+    {
+      "id": "korenmarkt",
+      "title": "Korenmarkt",
+      "lat": 51.0548,
+      "lon": 3.7213,
+      "wiki": [
+        "korenmarkt"
+      ]
+    },
+    {
+      "id": "sint-niklaas",
+      "title": "St Nicholas' Church",
+      "lat": 51.0541,
+      "lon": 3.7218,
+      "wiki": [
+        "niklaas",
+        "nicholas"
+      ]
+    }
+  ]
+}

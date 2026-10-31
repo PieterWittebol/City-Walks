@@ -1,0 +1,105 @@
+{
+  "schema": 2,
+  "title": "City Walks",
+  "cities": [
+    {
+      "id": "brussels",
+      "name": "Brussels",
+      "lat": 50.8467,
+      "lon": 4.3525,
+      "walks": [
+        {
+          "id": "comics-centre",
+          "file": "walk-brussels-comics.json",
+          "title": "Comic Strip Walk",
+          "subtitle": "Historic centre",
+          "kind": "comics",
+          "stops": 25,
+          "distanceKm": 4
+        },
+        {
+          "id": "all-murals",
+          "file": "walk-brussels-all-murals.json",
+          "title": "Every comic mural in the centre",
+          "subtitle": "City of Brussels open data",
+          "kind": "comics",
+          "generated": true
+        },
+        {
+          "id": "highlights",
+          "file": "walk-brussels-highlights.json",
+          "title": "Highlights of Brussels",
+          "subtitle": "Wikidata + Wikipedia",
+          "kind": "highlights",
+          "generated": true
+        }
+      ]
+    },
+    {
+      "id": "ghent",
+      "name": "Ghent",
+      "lat": 51.0543,
+      "lon": 3.7253,
+      "walks": [
+        {
+          "id": "medieval",
+          "file": "walk-ghent-medieval.json",
+          "title": "Medieval Ghent",
+          "subtitle": "Cathedral, belfry, castle and quays",
+          "kind": "heritage",
+          "stops": 13,
+          "distanceKm": 2.5
+        },
+        {
+          "id": "street-art",
+          "file": "walk-ghent-street-art.json",
+          "title": "Street art in Ghent",
+          "subtitle": "OpenStreetMap",
+          "kind": "street-art",
+          "generated": true
+        },
+        {
+          "id": "highlights",
+          "file": "walk-ghent-highlights.json",
+          "title": "Highlights of Ghent",
+          "subtitle": "Wikidata + Wikipedia",
+          "kind": "highlights",
+          "generated": true
+        }
+      ]
+    },
+    {
+      "id": "antwerp",
+      "name": "Antwerp",
+      "lat": 51.2194,
+      "lon": 4.4025,
+      "walks": [
+        {
+          "id": "old-town",
+          "file": "walk-antwerp-old-town.json",
+          "title": "Old Antwerp",
+          "subtitle": "From Central Station to Het Steen",
+          "kind": "heritage",
+          "stops": 14,
+          "distanceKm": 3.3
+        },
+        {
+          "id": "highlights",
+          "file": "walk-antwerp-highlights.json",
+          "title": "Highlights of Antwerp",
+          "subtitle": "Wikidata + Wikipedia",
+          "kind": "highlights",
+          "generated": true
+        },
+        {
+          "id": "street-art",
+          "file": "walk-antwerp-street-art.json",
+          "title": "Street art in Antwerp",
+          "subtitle": "OpenStreetMap",
+          "kind": "street-art",
+          "generated": true
+        }
+      ]
+    }
+  ]
+}

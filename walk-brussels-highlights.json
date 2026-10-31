@@ -1,0 +1,18 @@
+{
+  "schema": 2,
+  "id": "highlights",
+  "title": "Highlights of Brussels",
+  "subtitle": "Most notable heritage around the Grand-Place",
+  "description": "The best-known protected monuments, churches, museums and squares within 1 km of the Grand-Place, selected from Wikidata by how many Wikipedia languages describe them. Texts come from Wikipedia.",
+  "lang": "en",
+  "generator": {
+    "type": "wikidata",
+    "center": [
+      50.8467,
+      4.3525
+    ],
+    "radiusKm": 1.0,
+    "limit": 15,
+    "minSitelinks": 8
+  }
+}

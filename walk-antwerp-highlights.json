@@ -1,0 +1,18 @@
+{
+  "schema": 2,
+  "id": "highlights",
+  "title": "Highlights of Antwerp",
+  "subtitle": "Most notable heritage in the old town",
+  "description": "The best-known protected monuments and buildings within 1 km of the Grote Markt, selected from Wikidata and the Flemish heritage inventory. Texts come from Wikipedia.",
+  "lang": "en",
+  "generator": {
+    "type": "wikidata",
+    "center": [
+      51.2213,
+      4.3997
+    ],
+    "radiusKm": 1.0,
+    "limit": 15,
+    "minSitelinks": 5
+  }
+}

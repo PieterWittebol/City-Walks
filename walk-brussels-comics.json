@@ -1,0 +1,468 @@
+{
+  "schema": 2,
+  "id": "comics-centre",
+  "title": "Comic Strip Walk",
+  "subtitle": "Historic centre",
+  "description": "25 comic strip murals from the Comics Art Museum past the Grand-Place and Manneken Pis to Saint-Géry and Dansaert. Positions are checked against the City of Brussels open data and OpenStreetMap.",
+  "lang": "en",
+  "geocodeSuffix": "1000 Bruxelles, Belgium",
+  "stops": [
+    {
+      "id": "cbbd",
+      "title": "Comics Art Museum",
+      "address": "Rue des Sables 20",
+      "lat": 50.8512,
+      "lon": 4.3596,
+      "text": "The Belgian Comic Strip Center sits in the Waucquez warehouse, an Art Nouveau textile store designed by Victor Horta (1906). A good start: the museum covers the history of Belgian comics, from Tintin and Spirou to today's graphic novels.",
+      "wiki": [
+        "comic strip center",
+        "stripmuseum",
+        "centre belge de la bande dessinee"
+      ]
+    },
+    {
+      "id": "gaston-statue",
+      "title": "Gaston Lagaffe (statue)",
+      "artist": "André Franquin",
+      "year": "1996",
+      "address": "Boulevard Pachéco / Rue des Sables",
+      "lat": 50.8508,
+      "lon": 4.3604,
+      "match": [
+        "gaston",
+        "lagaffe",
+        "guust"
+      ],
+      "artworkType": "statue",
+      "text": "Gaston, the lazy, inventive office boy of Spirou magazine, was created by André Franquin in 1957. In the original strips, his disastrous inventions and naps constantly sabotage the office's attempts to sign contracts."
+    },
+    {
+      "id": "scorpion",
+      "title": "Le Scorpion",
+      "artist": "Enrico Marini",
+      "year": "2002",
+      "address": "Rue du Treurenberg 16",
+      "lat": 50.8486,
+      "lon": 4.36,
+      "match": [
+        "scorpion",
+        "schorpioen",
+        "marini"
+      ],
+      "text": "Le Scorpion, written by Stephen Desberg and drawn by Enrico Marini, is a swashbuckling series set in 18th-century Rome, full of papal intrigue. The cathedral of St Michael and St Gudula is just around the corner."
+    },
+    {
+      "id": "gaston",
+      "title": "Gaston",
+      "artist": "André Franquin",
+      "year": "2007",
+      "address": "Rue de l'Écuyer 9",
+      "lat": 50.8482,
+      "lon": 4.3555,
+      "match": [
+        "gaston",
+        "lagaffe",
+        "guust"
+      ],
+      "artworkType": "mural",
+      "text": "A second Gaston, this time on a wall. Franquin, who also shaped Spirou and created the Marsupilami, is considered one of the masters of the Marcinelle school, the dynamic, humorous counterpart to Hergé's 'ligne claire'."
+    },
+    {
+      "id": "poje",
+      "title": "Poje",
+      "artist": "Cauvin & Carpentier",
+      "address": "Rue de l'Écuyer 55 / Rue des Dominicains",
+      "lat": 50.8491,
+      "lon": 4.3539,
+      "match": [
+        "poje"
+      ],
+      "text": "Poje is a gag series written by Raoul Cauvin, the extremely prolific Belgian scenarist behind Les Tuniques Bleues and Cédric. Look up: the wall is on the corner with Rue des Dominicains."
+    },
+    {
+      "id": "tintin",
+      "title": "Tintin – The Calculus Affair",
+      "artist": "Hergé",
+      "year": "2005",
+      "address": "Rue de l'Étuve 33",
+      "lat": 50.8448,
+      "lon": 4.3505,
+      "match": [
+        "tintin",
+        "kuifje",
+        "hergé",
+        "herge"
+      ],
+      "text": "Tintin, Snowy and Captain Haddock escaping down a fire escape, a scene from The Calculus Affair (1956). Hergé (Georges Remi) was born in Etterbeek, Brussels, in 1907; Tintin first appeared in 1929. Manneken Pis is a few steps further down this street."
+    },
+    {
+      "id": "rameau",
+      "title": "Olivier Rameau",
+      "artist": "Dany",
+      "year": "1997",
+      "address": "Rue du Chêne 9",
+      "lat": 50.8446,
+      "lon": 4.3512,
+      "match": [
+        "rameau"
+      ],
+      "text": "Olivier Rameau, by Dany with writer Greg, follows a strait-laced court clerk who ends up in Rêverose, a land where dreams and whims rule. It started in Tintin magazine in 1968."
+    },
+    {
+      "id": "albert",
+      "title": "Le jeune Albert",
+      "artist": "Yves Chaland",
+      "year": "2000",
+      "address": "Rue des Alexiens 49",
+      "lat": 50.8431,
+      "lon": 4.35,
+      "match": [
+        "albert",
+        "chaland"
+      ],
+      "text": "Yves Chaland's 'young Albert' is a cheeky Brussels kid drawn in a refined retro 'ligne claire'. Chaland died in a car accident in 1990, only 33, and remains a cult figure among comics artists."
+    },
+    {
+      "id": "stam",
+      "title": "Stam & Pilou",
+      "artist": "De Marck & De Wulf",
+      "year": "2011",
+      "address": "Rue des Alexiens 53–55 (inside the café)",
+      "lat": 50.8429,
+      "lon": 4.3497,
+      "match": [
+        "stam",
+        "pilou"
+      ],
+      "text": "This one is inside the café 'In 't Goudblommeke in Papier', so peek through the window or go in for a drink. The café was a regular haunt of René Magritte and the Brussels surrealists."
+    },
+    {
+      "id": "monsieurjean",
+      "title": "Monsieur Jean",
+      "artist": "Dupuy & Berberian",
+      "year": "2002",
+      "address": "Rue des Bogards / Rue du Midi",
+      "lat": 50.8442,
+      "lon": 4.3484,
+      "match": [
+        "jean",
+        "dupuy",
+        "berberian"
+      ],
+      "text": "Monsieur Jean, by the duo Philippe Dupuy and Charles Berberian, follows a Parisian writer's everyday life, love life and anxieties. The pair received the Grand Prix of the Angoulême festival in 2008."
+    },
+    {
+      "id": "xiii",
+      "title": "XIII",
+      "artist": "William Vance & Jean Van Hamme",
+      "year": "2010",
+      "address": "Rue Philippe de Champagne 33",
+      "lat": 50.8432,
+      "lon": 4.3472,
+      "match": [
+        "xiii"
+      ],
+      "text": "XIII opens with an amnesiac man washed up on a beach with only the tattoo 'XIII' as a clue. Jean Van Hamme and William Vance's political thriller started in 1984 and became one of the best-selling Franco-Belgian series."
+    },
+    {
+      "id": "yoko",
+      "title": "Yoko Tsuno",
+      "artist": "Roger Leloup",
+      "year": "2010",
+      "address": "Rue Terre-Neuve 15",
+      "lat": 50.8425,
+      "lon": 4.3462,
+      "match": [
+        "yoko",
+        "tsuno"
+      ],
+      "text": "Yoko Tsuno, a Japanese electronics engineer, has been solving sci-fi adventures since 1970 in Spirou. Her creator Roger Leloup previously worked in Hergé's studio, where he worked on the technical drawings and vehicles in Tintin."
+    },
+    {
+      "id": "thorgal",
+      "title": "Thorgal & Aaricia",
+      "artist": "Grzegorz Rosiński & Jean Van Hamme",
+      "year": "2013",
+      "address": "Place Anneessens 2a",
+      "lat": 50.8446,
+      "lon": 4.3442,
+      "match": [
+        "thorgal",
+        "aaricia"
+      ],
+      "text": "Thorgal, a Viking-age fantasy saga, began in 1977 (Van Hamme again, with Polish artist Grzegorz Rosiński). The square is named after Frans Anneessens, a guild leader beheaded in 1719 for defending the city's privileges."
+    },
+    {
+      "id": "isabelle",
+      "title": "Isabelle",
+      "artist": "Will",
+      "year": "1997",
+      "address": "Rue de la Verdure 13",
+      "lat": 50.845,
+      "lon": 4.3456,
+      "match": [
+        "isabelle"
+      ],
+      "text": "Isabelle is a fantasy series by Will (Willy Maltaite), a pillar of Spirou magazine, about a girl caught up in magical adventures. Will was known for his rich backgrounds and colours."
+    },
+    {
+      "id": "ric",
+      "title": "Ric Hochet",
+      "artist": "Tibet",
+      "year": "1994",
+      "address": "Rue du Bon Secours 9",
+      "lat": 50.8462,
+      "lon": 4.3493,
+      "match": [
+        "ric",
+        "hochet"
+      ],
+      "text": "Ric Hochet is a reporter-detective for the newspaper La Rafale, created by Tibet and writer A.-P. Duchâteau in 1955."
+    },
+    {
+      "id": "passage",
+      "title": "Le Passage",
+      "artist": "François Schuiten",
+      "year": "1995",
+      "address": "Rue du Marché au Charbon 17",
+      "lat": 50.8464,
+      "lon": 4.3501,
+      "match": [
+        "passage",
+        "schuiten"
+      ],
+      "text": "A trompe-l'œil by François Schuiten, co-creator (with Benoît Peeters) of Les Cités obscures, a series of imaginary cities full of Brussels-like architecture. Schuiten also designed the Porte de Hal / Hallepoort metro station."
+    },
+    {
+      "id": "broussaille",
+      "title": "Broussaille",
+      "artist": "Frank Pé",
+      "year": "1991/1999",
+      "address": "Rue du Marché au Charbon / Rue des Teinturiers",
+      "lat": 50.8457,
+      "lon": 4.3489,
+      "match": [
+        "broussaille"
+      ],
+      "text": "One of the oldest walls of the route. Broussaille, by Frank Pé, is a young man with a deep love of nature, and the series has a poetic, slow pace."
+    },
+    {
+      "id": "sackville",
+      "title": "Victor Sackville",
+      "artist": "Francis Carin",
+      "year": "2002",
+      "address": "Rue du Marché au Charbon / Rue des Teinturiers",
+      "lat": 50.8456,
+      "lon": 4.3486,
+      "match": [
+        "sackville"
+      ],
+      "text": "Victor Sackville is a British secret agent during World War I, drawn by Francis Carin in a clean 'ligne claire' style. Just across the corner from Broussaille."
+    },
+    {
+      "id": "nero",
+      "title": "Nero",
+      "artist": "Marc Sleen",
+      "year": "1995",
+      "address": "Place Saint-Géry 20",
+      "lat": 50.8478,
+      "lon": 4.3477,
+      "match": [
+        "nero",
+        "sleen"
+      ],
+      "text": "Nero is a Flemish classic: absurd adventures of a lazy, opinionated anti-hero, published daily in newspapers from 1947 to 2002. Marc Sleen drew it for more than half a century. The market hall here stands where Brussels was born, on a former island in the Senne."
+    },
+    {
+      "id": "ange",
+      "title": "L'Ange",
+      "artist": "Yslaire",
+      "year": "1998",
+      "address": "Rue des Chartreux 19",
+      "lat": 50.8484,
+      "lon": 4.3468,
+      "match": [
+        "ange",
+        "yslaire",
+        "engel"
+      ],
+      "text": "An angel by Yslaire (Bernard Hislaire), known for the dark romantic saga Sambre and for 'Le Ciel au-dessus de Bruxelles'. Rue des Chartreux is packed with bars; look up, the wall is high."
+    },
+    {
+      "id": "asterix",
+      "title": "Astérix",
+      "artist": "Goscinny & Uderzo",
+      "year": "2005",
+      "address": "Rue de la Buanderie 15",
+      "lat": 50.8474,
+      "lon": 4.3438,
+      "match": [
+        "asterix",
+        "astérix"
+      ],
+      "text": "The indomitable Gauls, created in 1959 by René Goscinny and Albert Uderzo. Early in his career Goscinny worked for the Brussels press agency World Press, where he met Uderzo."
+    },
+    {
+      "id": "luckyluke",
+      "title": "Lucky Luke",
+      "artist": "Morris",
+      "year": "1993",
+      "address": "Rue de la Buanderie / Rue 't Kint",
+      "lat": 50.8478,
+      "lon": 4.3429,
+      "match": [
+        "lucky",
+        "luke",
+        "dalton"
+      ],
+      "text": "'The man who shoots faster than his shadow' was created in 1946 by the Belgian artist Morris, later with Goscinny as writer. Lucky Luke famously swapped his cigarette for a blade of grass in 1983."
+    },
+    {
+      "id": "cori",
+      "title": "Cori, de scheepsjongen",
+      "artist": "Bob de Moor",
+      "year": "1998",
+      "address": "Rue des Fabriques 21",
+      "lat": 50.8484,
+      "lon": 4.3436,
+      "match": [
+        "cori",
+        "moor"
+      ],
+      "text": "Cori is a cabin boy in the 16th-century Dutch fleet. Bob de Moor was Hergé's right hand for decades, and drew many of the backgrounds you know from Tintin."
+    },
+    {
+      "id": "nic",
+      "title": "Les rêves de Nic",
+      "artist": "Hermann",
+      "year": "1999",
+      "address": "Rue des Fabriques / Rue de la Senne",
+      "lat": 50.8476,
+      "lon": 4.3424,
+      "match": [
+        "nic",
+        "hermann"
+      ],
+      "text": "A dreamy early series by Hermann, better known for Bernard Prince, Comanche and Jeremiah. Rue de la Senne follows the river that once ran through Brussels; it was covered over in the 1860s–70s to build the central boulevards."
+    },
+    {
+      "id": "blake",
+      "title": "Blake & Mortimer",
+      "artist": "Edgar P. Jacobs",
+      "year": "2005",
+      "address": "Rue du Houblon 24",
+      "lat": 50.8497,
+      "lon": 4.3432,
+      "match": [
+        "blake",
+        "mortimer",
+        "jacobs"
+      ],
+      "text": "Captain Francis Blake of MI5 and Professor Philip Mortimer first appeared in Tintin magazine in 1946. Edgar P. Jacobs, a former opera singer, also helped Hergé recolour early Tintin albums. End of the walk: the Sainte-Catherine area is a few minutes north."
+    }
+  ],
+  "sights": [
+    {
+      "title": "Cathedral of St Michael and St Gudula",
+      "lat": 50.8478,
+      "lon": 4.3601,
+      "text": "Brussels' Gothic cathedral, built over roughly three centuries (13th–15th). Royal weddings and funerals take place here."
+    },
+    {
+      "title": "Galeries Royales Saint-Hubert",
+      "lat": 50.8478,
+      "lon": 4.3547,
+      "text": "Opened in 1847, one of Europe's first covered shopping arcades, designed by Jean-Pierre Cluysenaar. Glass roof, chocolatiers and a small theatre."
+    },
+    {
+      "title": "Grand-Place",
+      "lat": 50.8467,
+      "lon": 4.3524,
+      "text": "UNESCO World Heritage since 1998. The Gothic Town Hall dates from the 15th century; most guild houses were rebuilt in a few years after the French bombardment of 1695."
+    },
+    {
+      "title": "Manneken Pis",
+      "lat": 50.845,
+      "lon": 4.35,
+      "text": "The famous little bronze, made by Jérôme Duquesnoy the Elder in 1619. The one here is a copy; the original is in the Brussels City Museum on the Grand-Place. He owns over a thousand costumes."
+    },
+    {
+      "title": "In 't Goudblommeke in Papier",
+      "lat": 50.8428,
+      "lon": 4.3496,
+      "text": "Historic café once frequented by René Magritte and the surrealists. The Stam & Pilou mural is inside."
+    },
+    {
+      "title": "Notre-Dame du Bon Secours",
+      "lat": 50.846,
+      "lon": 4.3487,
+      "text": "A small Baroque church (late 17th century) with an unusual hexagonal choir under a dome."
+    },
+    {
+      "title": "Place Anneessens",
+      "lat": 50.8443,
+      "lon": 4.3447,
+      "text": "Named after Frans Anneessens, executed in 1719. His statue stands on the square."
+    },
+    {
+      "title": "Bourse / Belgian Beer World",
+      "lat": 50.8483,
+      "lon": 4.3497,
+      "text": "The neoclassical former stock exchange (1873, Léon Suys), now home to the Belgian Beer World experience and a rooftop bar."
+    },
+    {
+      "title": "Halles Saint-Géry",
+      "lat": 50.8479,
+      "lon": 4.3472,
+      "text": "Neo-Renaissance covered market of 1881, built where the chapel of Saint Géry stood on an island in the Senne, traditionally the birthplace of Brussels."
+    }
+  ],
+  "matchSources": [
+    {
+      "host": "opendata.brussels.be",
+      "dataset": "bruxelles_parcours_bd",
+      "sourceLabel": "City of Brussels open data",
+      "fields": {
+        "title": [
+          "personnage_s",
+          "personnages",
+          "personnage",
+          "characters",
+          "character_s",
+          "titre",
+          "title",
+          "nom",
+          "name"
+        ],
+        "artist": [
+          "auteur_s",
+          "auteurs",
+          "auteur",
+          "authors",
+          "author_s",
+          "artiste",
+          "artist"
+        ],
+        "year": [
+          "annee",
+          "date",
+          "year",
+          "jaar"
+        ],
+        "address": [
+          "adresse",
+          "address",
+          "adres"
+        ],
+        "text": [
+          "description",
+          "descriptif",
+          "texte",
+          "text",
+          "beschrijving"
+        ]
+      },
+      "type": "ods"
+    }
+  ]
+}

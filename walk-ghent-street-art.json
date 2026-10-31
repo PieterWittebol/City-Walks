@@ -1,0 +1,21 @@
+{
+  "schema": 2,
+  "id": "street-art",
+  "title": "Street art in Ghent",
+  "subtitle": "Murals and graffiti mapped on OpenStreetMap",
+  "description": "Murals and graffiti within 1.5 km of the centre, as mapped by OpenStreetMap volunteers, in a walkable order. Named works come first; missing a piece? You can add it on openstreetmap.org.",
+  "lang": "en",
+  "generator": {
+    "type": "osm-art",
+    "center": [
+      51.0549,
+      3.7259
+    ],
+    "radiusKm": 1.5,
+    "limit": 20,
+    "artworkTypes": [
+      "mural",
+      "graffiti"
+    ]
+  }
+}

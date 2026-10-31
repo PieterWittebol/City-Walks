@@ -1,0 +1,18 @@
+{
+  "schema": 2,
+  "id": "highlights",
+  "title": "Highlights of Ghent",
+  "subtitle": "Most notable heritage in the centre",
+  "description": "The best-known protected monuments and buildings within 900 m of the Belfry, selected from Wikidata and the Flemish heritage inventory. Texts come from Wikipedia.",
+  "lang": "en",
+  "generator": {
+    "type": "wikidata",
+    "center": [
+      51.0543,
+      3.7253
+    ],
+    "radiusKm": 0.9,
+    "limit": 15,
+    "minSitelinks": 5
+  }
+}

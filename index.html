@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://tile.openstreetmap.org https://commons.wikimedia.org https://upload.wikimedia.org https://opendata.brussels.be https://opendata.bruxelles.be https://data.stad.gent; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://overpass.kumi.systems https://nominatim.openstreetmap.org https://routing.openstreetmap.de https://www.wikidata.org https://query.wikidata.org https://*.wikipedia.org https://opendata.brussels.be https://opendata.bruxelles.be https://data.stad.gent; font-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#f5c518">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="City Walks">
+<title>City Walks</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="leaflet.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="map"></div>
+
+<header id="top">
+  <div class="brand" id="brand">City Walks</div>
+  <div id="progress" class="hidden">0 / 0</div>
+  <button id="btnMenu" class="icon" aria-label="Menu">☰</button>
+</header>
+
+<div id="toast" class="hidden" role="status"></div>
+
+<div id="fabs">
+  <button id="btnLocate" class="fab on" aria-label="Follow my position">◎</button>
+</div>
+
+<section id="sheet" class="collapsed hidden">
+  <div class="grab" id="grab"></div>
+  <div id="nav">
+    <div id="arrowWrap"><div id="arrow">➤</div></div>
+    <div class="navtxt">
+      <div id="navLabel">Next stop</div>
+      <div id="navTitle">–</div>
+      <div id="navDist">–</div>
+    </div>
+  </div>
+  <div id="detail">
+    <img id="dImg" class="hidden" alt="" referrerpolicy="strict-origin-when-cross-origin">
+    <div id="dMeta"></div>
+    <p id="dText"></p>
+    <div id="dLinks" class="links"></div>
+    <div class="row">
+      <button id="btnPrev">‹ Prev</button>
+      <button id="btnSpeak">🔊 Read</button>
+      <button id="btnSeen">✓ Seen</button>
+      <button id="btnNext">Next ›</button>
+    </div>
+  </div>
+</section>
+
+<div id="start" class="overlay">
+  <div class="card">
+    <div class="logo"><img src="icon.svg" alt=""></div>
+    <h1 id="siteTitle">City Walks</h1>
+    <div id="cityList" class="chips"></div>
+    <div id="walkList" class="walks"><p class="small">Loading walks…</p></div>
+    <p id="walkDesc"></p>
+    <label class="chk">Texts in <select id="optLang"></select></label>
+    <label class="chk"><input type="checkbox" id="optVoice" checked> Read stories aloud on arrival</label>
+    <button id="btnStart" class="primary" disabled>Start the walk</button>
+    <button id="btnDemo" class="link" disabled>Try a demo (simulated walk)</button>
+    <div id="prep" class="small"></div>
+  </div>
+</div>
+
+<div id="menu" class="overlay hidden">
+  <div class="card">
+    <h2>Stops</h2>
+    <ol id="stopList"></ol>
+    <label class="chk"><input type="checkbox" id="optVoice2"> Read aloud on arrival</label>
+    <label class="chk"><input type="checkbox" id="optSights" checked> Alert me about sights on the way</label>
+    <label class="chk">Texts in <select id="optLang2"></select></label>
+    <div class="row">
+      <button id="btnRefresh">Refresh walk data</button>
+      <button id="btnReset">Reset progress</button>
+    </div>
+    <div class="row mt8">
+      <button id="btnOtherWalk">Choose another walk</button>
+      <button id="btnDebug">Debug log</button>
+    </div>
+    <p class="small">Open data from: map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors · texts <a href="https://www.wikipedia.org/" target="_blank" rel="noopener noreferrer">Wikipedia</a> (CC BY-SA) · places <a href="https://www.wikidata.org/" target="_blank" rel="noopener noreferrer">Wikidata</a> (CC0) · photos <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a> · <a href="https://opendata.brussels.be/" target="_blank" rel="noopener noreferrer">City of Brussels open data</a> · <a href="https://inventaris.onroerenderfgoed.be/" target="_blank" rel="noopener noreferrer">Flemish heritage inventory</a> · walking routes OSRM / FOSSGIS · addresses Nominatim</p>
+    <button id="btnClose" class="primary">Close</button>
+  </div>
+</div>
+
+<div id="debug" class="overlay hidden">
+  <div class="card">
+    <h2>Debug log</h2>
+    <p class="small">Copy this and paste it into the chat with Claude. It contains your GPS positions, so don't post it publicly.</p>
+    <textarea id="logText" readonly></textarea>
+    <div class="row">
+      <button id="btnCopyLog">Copy log</button>
+      <button id="btnTestSpeech">Test speech</button>
+      <button id="btnTestSources">Test data sources</button>
+      <button id="btnClearLog">Clear</button>
+    </div>
+    <button id="btnCloseDebug" class="primary">Close</button>
+  </div>
+</div>
+
+<script src="leaflet.js"></script>
+<script src="util.js"></script>
+<script src="sources.js"></script>
+<script src="schema.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

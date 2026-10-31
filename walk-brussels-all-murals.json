@@ -1,0 +1,60 @@
+{
+  "schema": 2,
+  "id": "all-murals",
+  "title": "Every comic mural in the centre",
+  "subtitle": "Straight from the City of Brussels open data",
+  "description": "All murals of the official Comic Book Route within about 1.3 km of the Grand-Place, put in a walkable order automatically. Long: pick and choose.",
+  "lang": "fr",
+  "generator": {
+    "type": "ods",
+    "host": "opendata.brussels.be",
+    "dataset": "bruxelles_parcours_bd",
+    "sourceLabel": "City of Brussels open data",
+    "fields": {
+      "title": [
+        "personnage_s",
+        "personnages",
+        "personnage",
+        "characters",
+        "character_s",
+        "titre",
+        "title",
+        "nom",
+        "name"
+      ],
+      "artist": [
+        "auteur_s",
+        "auteurs",
+        "auteur",
+        "authors",
+        "author_s",
+        "artiste",
+        "artist"
+      ],
+      "year": [
+        "annee",
+        "date",
+        "year",
+        "jaar"
+      ],
+      "address": [
+        "adresse",
+        "address",
+        "adres"
+      ],
+      "text": [
+        "description",
+        "descriptif",
+        "texte",
+        "text",
+        "beschrijving"
+      ]
+    },
+    "center": [
+      50.8467,
+      4.3525
+    ],
+    "radiusKm": 1.3,
+    "limit": 45
+  }
+}
