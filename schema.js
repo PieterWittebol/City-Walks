@@ -95,5 +95,25 @@ function checkCities(c) {
   });
   return errs;
 }
-window.Schema = { cleanId, strList, okPoint, cleanStop, cleanSource, cleanWalk, validFile, checkWalk, checkCities, KINDS };
+
+// Ready-made walk data from the GitHub build (built/*.json): treated as untrusted and sanitised like everything else.
+function cleanBuilt(b) {
+  if (!b || typeof b !== "object" || !Array.isArray(b.stops)) return null;
+  const ids = new Set();
+  const stops = b.stops.filter((s) => s && okLat(s.lat) && okLon(s.lon) && s.title).map((s, i) => {
+    const c = cleanStop(s, i, ids);
+    c.credit = str(s.credit, 120); c.src = ["wikipedia", "ods", "osm", "geocode"].includes(s.src) ? s.src : undefined;
+    c.qid = /^Q\d{1,12}$/.test(s.qid || "") ? s.qid : undefined;
+    return c;
+  });
+  if (!stops.length) return null;
+  const line = (Array.isArray(b.line) ? b.line : []).filter((p) => p && okLat(p.lat) && okLon(p.lon)).slice(0, 20000).map((p) => ({ lat: p.lat, lon: p.lon }));
+  const live = (Array.isArray(b.live) ? b.live : []).filter((x) => x && okLat(x.lat) && okLon(x.lon) && x.title).slice(0, 80).map((x) => ({
+    title: str(x.title, 120), lat: x.lat, lon: x.lon, text: str(x.text, 600), url: safeUrl(x.url),
+    wp: /^[a-z-]{2,12}:.{1,200}$/.test(x.wp || "") ? x.wp : null, wd: /^Q\d{1,12}$/.test(x.wd || "") ? x.wd : null,
+  }));
+  return { hash: str(b.hash, 20), lang: Src.LANGS.includes(b.lang) ? b.lang : null, builtAt: str(b.builtAt, 40),
+    stops, line: line.length > 1 ? line : stops.map((p) => ({ lat: p.lat, lon: p.lon })), km: typeof b.km === "number" && isFinite(b.km) ? b.km : null, live };
+}
+window.Schema = { cleanBuilt, cleanId, strList, okPoint, cleanStop, cleanSource, cleanWalk, validFile, checkWalk, checkCities, KINDS };
 })();

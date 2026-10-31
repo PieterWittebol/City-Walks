@@ -149,6 +149,7 @@ function showTokenInfo() {
   }
   if (remember) text += "\nThe token is remembered on this device. Sign out to remove it.";
   n.textContent = text; n.classList.toggle("bad", bad);
+  const l = $("lnkBuilds"); l.href = "https://github.com/" + auth.repo + "/actions"; l.classList.remove("hidden");
 }
 
 // ---------- navigation ----------
@@ -240,7 +241,7 @@ async function saveCities(message) {
 $("btnSaveCities").onclick = async () => {
   const msg = el("input", { value: "Update list of walks", maxLength: 200 });
   if (!(await dialog("Save list", [el("label", {}, "Change description", msg)], [{ label: "Cancel", value: false }, { label: "Save", value: true, cls: "primary" }]))) return;
-  try { await saveCities(msg.value); toast("Saved. The app shows it in about a minute."); renderHome(); }
+  try { await saveCities(msg.value); toast("Saved ✓ The app shows the change in a few minutes."); renderHome(); }
   catch (e) { await dialog("Not saved", e.message, [{ label: "OK", value: 1 }]); if (e.status === 409 || e.status === 422) { await loadCities(); renderHome(); } }
 };
 
@@ -490,7 +491,7 @@ $("btnSaveWalk").onclick = async () => {
   const e = cur.entry;
   const entryChanged = cur.isNew || e.title !== out.title || (e.subtitle || "") !== (out.subtitle || "") || (!out.generator && e.stops !== out.stops.length) || !!e.generated !== !!out.generator || cur.kindTouched;
   const msg = el("input", { value: (cur.isNew ? "Add walk " : "Update walk ") + out.title, maxLength: 200 });
-  const ok = await dialog("Save walk", [el("label", {}, "Change description", msg), el("p", { className: "small", textContent: `Saves ${cur.path}${entryChanged || citiesDirty ? " and cities.json" : ""} to ${auth.repo}. The app shows the change about a minute later.` })],
+  const ok = await dialog("Save walk", [el("label", {}, "Change description", msg), el("p", { className: "small", textContent: `Saves ${cur.path}${entryChanged || citiesDirty ? " and cities.json" : ""} to ${auth.repo}. The app shows the change a few minutes later, once GitHub has rebuilt the walk data.` })],
     [{ label: "Cancel", value: false }, { label: "Save", value: true, cls: "primary" }]);
   if (!ok) return;
   $("btnSaveWalk").disabled = true;
@@ -502,7 +503,7 @@ $("btnSaveWalk").onclick = async () => {
     if (!e.kind) delete e.kind;
     if (cur.isNew) { cur.city.walks = cur.city.walks || []; cur.city.walks.push(e); cur.isNew = false; }
     if (entryChanged || citiesDirty) await saveCities(msg.value);
-    updateDirty(); renderStops(); toast("Saved ✓ The app shows it in about a minute.", 5000);
+    updateDirty(); renderStops(); toast("Saved ✓ GitHub now rebuilds the walk data; the app shows the change in a few minutes.", 6000);
   } catch (err) {
     await dialog("Not saved", err.message, [{ label: "OK", value: 1 }]);
   } finally { $("btnSaveWalk").disabled = false; }

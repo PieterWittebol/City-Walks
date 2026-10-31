@@ -6,6 +6,35 @@ sights you pass on the way. Everything is built from **open data**.
 
 Live: `https://<your-username>.github.io/<this-repo>/`. Add it to your home screen for an app-like experience.
 
+## How the data gets to the phone
+
+A GitHub Action (`.github/workflows/build.yml` + `build.mjs`) runs after every change, every Monday and on demand.
+It looks up all open data **once**, for every walk in English, Dutch, French and German, and publishes the
+results as ready-made files in `built/` next to the app. Phones load those files from this site and don't
+query Wikipedia, Wikidata, OpenStreetMap, the routing service or Nominatim themselves. Only map tiles and
+photos still come from OpenStreetMap and Wikimedia.
+
+- **After a change** (e.g. a save in the editor), only the changed walks are looked up again. The rest is
+  reused from the published site.
+- **Every Monday** everything is rebuilt, to pick up improvements on Wikipedia and OpenStreetMap.
+- **Fallback:** if a walk has no ready-made file (a build failed, or it's still running), the phone looks
+  the data up itself, as before.
+- **Same code:** the build runs the app's own `util.js`, `sources.js`, `schema.js` and `builder.js` in a
+  sandbox. It identifies itself to the services with a User-Agent, spaces out its requests, retries politely
+  and caches identical requests.
+- **Report:** each run shows a summary per walk (languages, stops, how they were placed, route length) under
+  **Actions**. Problems appear there as warnings.
+
+### One-time setup
+
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+2. Create `.github/workflows/build.yml` (on github.com: Add file → Create new file, type the full path as the name)
+   and paste the workflow.
+3. Check **Actions**: the first run takes about 5–10 minutes. Later runs after an edit are much faster.
+
+The workflow has read-only access to the repository and only the rights needed to publish Pages. It uses no
+secrets and only GitHub's own actions, pinned to exact versions.
+
 ## Open data used
 
 | Source | Used for | Licence |
@@ -28,6 +57,8 @@ Not used on purpose: Street Art Cities' data. Its terms don't allow reuse in an 
 | `index.html` | The page (no inline scripts; includes the Content Security Policy) |
 | `util.js`, `sources.js`, `schema.js`, `app.js`, `app.css` | The app; `sources.js` holds all open data access, `schema.js` the file format rules |
 | `admin.html`, `admin.js`, `admin.css` | The editor |
+| `builder.js` | Builds a walk from open data (used by the app and the build) |
+| `build.mjs`, `.github/workflows/build.yml` | The GitHub build that prepares the data |
 | `leaflet.js`, `leaflet.css` | Map library (Leaflet 1.9.4, BSD-2), kept in the repo so no CDN is needed |
 | `sw.js` | Service worker: offline use, caches map tiles you've already seen |
 | `manifest.webmanifest`, `icon*` | Home-screen name and icon |
@@ -65,7 +96,7 @@ How the editor stays safe:
 
 1. Create `walk-<city>-<name>.json` (lowercase letters, digits, dashes).
 2. Add it under the right city in `cities.json` (or add a new city with `id`, `name`, `lat`, `lon`, `walks`).
-3. Commit. GitHub Pages publishes it in about a minute. GitHub's pencil icon works fine on a phone.
+3. Commit. The build publishes it in a few minutes. GitHub's pencil icon works fine on a phone.
 
 There are two kinds of walk.
 
@@ -113,7 +144,7 @@ Instead of `stops`, give a `generator`. The app fetches the places, puts them in
 Opendatasoft portals allowed: `opendata.brussels.be` and `data.stad.gent`. To add another portal, add it to
 `ODS_HOSTS` in `sources.js`, to the allow-lists in `util.js` **and** to the CSP in `index.html`.
 
-Results are cached on the phone and rebuilt automatically when the walk file or text language changes,
+The build prepares the result. On the phone it's cached and refreshed automatically when the walk file or text language changes,
 or via ☰ → Refresh walk data.
 
 ## Troubleshooting
