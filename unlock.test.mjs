@@ -96,3 +96,19 @@ test("parseRecord rejects malformed records", () => {
   };
   for (const [name, raw] of Object.entries(cases)) assert.equal(U.parseRecord(raw), null, name);
 });
+
+test("open returns the repo from the payload, not the record's plain-text repo", async () => {
+  const key = await U.deriveKey(prf(7));
+  const sealed = await U.seal(key, { token: TOKEN, repo: REPO }, "credA");
+  const rec = { ...sealed, repo: "Evil/Repo", credentialId: "credA", salt: U.newSalt(), v: 1 };
+  assert.equal((await U.open(key, rec, "credA")).repo, REPO);
+});
+
+test("seal and open reject a credential id that isn't a non-empty string", async () => {
+  const key = await U.deriveKey(prf(7));
+  const sealed = await U.seal(key, { token: TOKEN, repo: REPO }, "credA");
+  for (const bad of [undefined, "", new Uint8Array(16)]) {
+    await assert.rejects(U.seal(key, { token: TOKEN, repo: REPO }, bad));
+    await assert.rejects(U.open(key, sealed, bad));
+  }
+});

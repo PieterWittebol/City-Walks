@@ -22,12 +22,15 @@ async function deriveKey(prf) {
   const base = await crypto.subtle.importKey("raw", prf, "HKDF", false, ["deriveKey"]);
   return crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt: new Uint8Array(0), info: enc.encode(INFO) }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
+const needId = (id) => { if (typeof id !== "string" || !id) throw new Error("Missing credential id"); };
 async function seal(key, payload, credentialId) {
+  needId(credentialId);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(AAD + credentialId) }, key, enc.encode(JSON.stringify({ token: payload.token, repo: payload.repo })));
   return { iv: b64uEnc(iv), ciphertext: b64uEnc(new Uint8Array(ct)) };
 }
 async function open(key, sealed, credentialId) {
+  needId(credentialId);
   let p;
   try {
     const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64uDec(sealed.iv), additionalData: enc.encode(AAD + credentialId) }, key, b64uDec(sealed.ciphertext));
