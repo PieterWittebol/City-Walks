@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "street-art",
-  "title": "Street art in Antwerp",
-  "subtitle": "Murals and graffiti mapped on OpenStreetMap",
-  "description": "Murals and graffiti within 2 km of the centre, as mapped by OpenStreetMap volunteers, in a walkable order.",
+  "title": {
+    "en": "Street art in Antwerp",
+    "nl": "Street art in Antwerpen",
+    "fr": "Street art à Anvers",
+    "de": "Street-Art in Antwerpen"
+  },
+  "subtitle": {
+    "en": "Murals and graffiti mapped on OpenStreetMap",
+    "nl": "Muurschilderingen en graffiti uit OpenStreetMap",
+    "fr": "Fresques et graffitis cartographiés sur OpenStreetMap",
+    "de": "Wandbilder und Graffiti aus OpenStreetMap"
+  },
+  "description": {
+    "en": "Murals and graffiti within 2 km of the centre, as mapped by OpenStreetMap volunteers, in a walkable order.",
+    "nl": "Muurschilderingen en graffiti binnen 2 km van het centrum, zoals vrijwilligers ze in OpenStreetMap intekenden, in een wandelbare volgorde.",
+    "fr": "Fresques et graffitis à moins de 2 km du centre, tels que cartographiés par les bénévoles d'OpenStreetMap, dans un ordre de marche.",
+    "de": "Wandbilder und Graffiti im Umkreis von 2 km um das Zentrum, wie sie Freiwillige in OpenStreetMap eingetragen haben, in begehbarer Reihenfolge."
+  },
   "lang": "en",
   "generator": {
     "type": "osm-art",

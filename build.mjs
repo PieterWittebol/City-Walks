@@ -24,7 +24,7 @@ function siteUrl() {
   const [owner, repo] = REPO.split("/");
   return repo.toLowerCase() === `${owner.toLowerCase()}.github.io` ? `https://${repo}/` : `https://${owner.toLowerCase()}.github.io/${repo}/`;
 }
-const FORMAT = 2; // bump when the built file format changes, so old published files aren't reused
+const FORMAT = 4; // bump when the built file format changes, so old published files aren't reused
 const warn = (m) => console.log(`::warning::${m}`);
 const summary = [];
 
@@ -33,12 +33,13 @@ const SCALE = Number(process.env.WAIT_SCALE || 1); // only for local testing
 const pause = (ms) => new Promise((r) => setTimeout(r, ms * SCALE));
 function politeFetch(baseFetch) {
   const cache = new Map(), lastByHost = new Map();
-  const gap = (host) => /overpass/.test(host) ? 1500 : /nominatim/.test(host) ? 1100 : /query\.wikidata/.test(host) ? 500 : 50;
+  const gap = (host) => /overpass/.test(host) ? 1500 : /nominatim/.test(host) ? 1100 : /query\.wikidata/.test(host) ? 500 : /onroerenderfgoed|erfgoed\.net/.test(host) ? 300 : 50;
   let stats = { requests: 0, cached: 0 };
   async function f(url, opts = {}) {
     const method = (opts.method || "GET").toUpperCase();
-    const key = method + " " + url + " " + (typeof opts.body === "string" ? opts.body : "");
-    if (cache.has(key)) { stats.cached++; const c = cache.get(key); return new Response(c.body, { status: c.status, headers: { "content-type": "application/json" } }); }
+    const accept = (opts.headers && (opts.headers.Accept || opts.headers.accept)) || "";
+    const key = method + " " + url + " " + accept + " " + (typeof opts.body === "string" ? opts.body : "");
+    if (cache.has(key)) { stats.cached++; const c = cache.get(key); return new Response(c.body, { status: c.status, headers: { "content-type": c.type || "application/json" } }); }
     const host = new URL(url).hostname;
     for (let attempt = 0; ; attempt++) {
       const wait = (lastByHost.get(host) || 0) + gap(host) - Date.now();
@@ -51,7 +52,7 @@ function politeFetch(baseFetch) {
       const busy = /overpass/.test(host) ? 3 : 2; // Overpass is often busy: wait longer and retry more
       if ((res.status === 429 || res.status >= 500) && attempt < busy) { await pause((/overpass/.test(host) ? 20000 : 5000) * (attempt + 1)); continue; }
       const body = await res.text();
-      if (res.ok) cache.set(key, { status: res.status, body });
+      if (res.ok) cache.set(key, { status: res.status, body, type: res.headers.get("content-type") || "" });
       return new Response(body, { status: res.status, headers: { "content-type": res.headers.get("content-type") || "application/json" } });
     }
   }
@@ -74,11 +75,101 @@ function loadModules(fetchImpl) {
   return sandbox;
 }
 
+// ---- Onroerend Erfgoed: Flemish heritage inventory (inventaris.onroerenderfgoed.be) ----
+// Finds the inventory object for a stop (via Wikidata P1764, or the agency's geo search service around the stop)
+// and adds its Dutch description. Only for stops in Flanders (the inventory doesn't cover Brussels).
+// Turn off with OE_TEXTS=off (e.g. if the reuse conditions turn out not to allow it).
+const OE_ON = process.env.OE_TEXTS !== "off";
+const OE_BASE = "https://inventaris.onroerenderfgoed.be/erfgoedobjecten/";
+const inFlanders = (p) => p.lat > 50.68 && p.lat < 51.51 && p.lon > 2.54 && p.lon < 5.92 && !(p.lat > 50.76 && p.lat < 50.92 && p.lon > 4.24 && p.lon < 4.49);
+const stripHtml = (h) => String(h || "").replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<br\s*\/?>|<\/p>/gi, "\n").replace(/<[^>]+>/g, " ")
+  .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+  .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)).replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+const normName = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]+/g, " ").split(" ").filter((w) => w.length > 2 && !["van", "het", "der", "den", "des", "the", "and", "sint", "saint", "kerk", "church", "gent", "ghent", "antwerpen", "antwerp"].includes(w));
+const nameMatch = (a, b) => { const A = normName(a), B = new Set(normName(b)); return A.length && A.filter((w) => B.has(w)).length / A.length >= 0.5; };
+let oeKeysLogged = false;
+function makeOE(f, sparql) {
+  const cache = new Map();
+  async function details(id) {
+    if (cache.has(id)) return cache.get(id);
+    let out = null;
+    try { // JSON representation of the inventory object
+      const r = await f(OE_BASE + id, { headers: { Accept: "application/json" } });
+      if (r.ok && /json/.test(r.headers.get("content-type") || "")) {
+        const j = await r.json();
+        if (!oeKeysLogged) { console.log("Onroerend Erfgoed JSON fields:", Object.keys(j).join(", ")); oeKeysLogged = true; }
+        const pick = (o, re, depth = 0) => { // first string field whose name matches re (searching nested objects)
+          if (!o || typeof o !== "object" || depth > 3) return "";
+          for (const [k, v] of Object.entries(o)) if (re.test(k) && typeof v === "string" && v.trim()) return v;
+          for (const v of Object.values(o)) { const x = pick(v, re, depth + 1); if (x) return x; }
+          return "";
+        };
+        const short = stripHtml(pick(j, /^korte_?beschrijving$|^samenvatting$|^summary$/i));
+        const long = stripHtml(pick(j, /^beschrijving$|^description$/i));
+        const text = short || long.split("\n").find((p) => p.length > 80) || long;
+        if (text) out = { id, name: stripHtml(j.naam || j.name || ""), text };
+      }
+    } catch (e) { console.log(`OE ${id}: JSON failed (${e.message})`); }
+    if (!out) try { // fallback: the page's own summary
+      const r = await f(OE_BASE + id, { headers: { Accept: "text/html" } });
+      const h = r.ok ? await r.text() : "";
+      const m = h.match(/<meta[^>]+(?:name|property)=["'](?:og:)?description["'][^>]+content=["']([^"']{40,})["']/i) || h.match(/<meta[^>]+content=["']([^"']{40,})["'][^>]+(?:name|property)=["'](?:og:)?description["']/i);
+      const t = h.match(/<title>([^<]+)<\/title>/i);
+      if (m) out = { id, name: stripHtml(t ? t[1].split("|")[0] : ""), text: stripHtml(m[1]) };
+    } catch (e) { console.log(`OE ${id}: page failed (${e.message})`); }
+    cache.set(id, out);
+    return out;
+  }
+  async function idsByQid(qids) {
+    if (!qids.length) return {};
+    try {
+      const rows = await sparql(`SELECT ?item ?id WHERE { VALUES ?item { ${qids.map((q) => "wd:" + q).join(" ")} } ?item wdt:P1764 ?id . }`);
+      const out = {}; for (const r of rows) { const q = (String(r.item).match(/Q\d+$/) || [])[0]; if (q && /^\d+$/.test(r.id) && !out[q]) out[q] = r.id; }
+      return out;
+    } catch (e) { console.log("OE: Wikidata lookup failed", e.message); return {}; }
+  }
+  async function idNear(stop) { // the agency's geo search service, 30 m around the stop
+    const geo = JSON.stringify({ type: "Point", coordinates: [stop.lon, stop.lat] });
+    try {
+      const r = await f(`https://geo.onroerenderfgoed.be/zoekdiensten/afbakeningen?categorie=erfgoedobjecten&buffer=30&geef_geometrie=0&geometrie=${encodeURIComponent(geo)}`, { headers: { Accept: "application/json" } });
+      if (!r.ok) { if (r.status === 401 || r.status === 403) console.log("OE geo search needs access (HTTP " + r.status + ")"); return null; }
+      const list = await r.json();
+      const hit = (Array.isArray(list) ? list : []).find((x) => x && /^\d+$/.test(String(x.id)) && nameMatch(stop.title, x.naam));
+      return hit ? String(hit.id) : null;
+    } catch (e) { return null; }
+  }
+  // add inventory texts to the stops of one walk, in one language
+  return async function enrich(stops, lang) {
+    let added = 0;
+    const flemish = stops.filter((s) => inFlanders(s));
+    if (!flemish.length) return 0;
+    const byQ = await idsByQid([...new Set(flemish.map((s) => s.qid).filter(Boolean))]);
+    for (const s of flemish) {
+      const id = (s.qid && byQ[s.qid]) || await idNear(s);
+      if (!id) continue;
+      const url = OE_BASE + id;
+      if (!(s.links || []).some((l) => l.url === url)) (s.links = s.links || []).push({ label: "Flemish heritage inventory", url });
+      if (!(lang === "nl" && s.textLang === "nl") && s.text) continue; // text only needed in Dutch, or when there's none
+      const d = await details(id);
+      if (!d || !d.text) continue;
+      const short = d.text.length > 700 ? d.text.slice(0, 680).replace(/\s+\S*$/, "") + "…" : d.text;
+      if (lang === "nl" && s.text && s.textLang === "nl") s.text += "\n\nUit de Vlaamse erfgoedinventaris: " + short;
+      else if (!s.text) { s.text = short; s.textLang = "nl"; }
+      else continue;
+      s.credit = [s.credit, "Inventory text: Agentschap Onroerend Erfgoed"].filter(Boolean).join(" · ");
+      added++;
+    }
+    return added;
+  };
+}
+
 export async function run({ fetchImpl = globalThis.fetch, previous = null } = {}) {
   const t0 = Date.now();
   const pf = politeFetch(fetchImpl);
   const W = loadModules(pf);
   const { Util, Schema, Builder, Sources } = W;
+  const oeEnrich = OE_ON ? makeOE(pf, (q) => Sources.sparql(q)) : null;
+  let oeCount = 0;
   const LANGS = Sources.LANGS;
 
   // 1. copy the site (root files only; no dotfiles, folders or build tooling)
@@ -104,6 +195,7 @@ export async function run({ fetchImpl = globalThis.fetch, previous = null } = {}
   async function buildOne(walk, lang, hash) {
     const r = await Builder.buildWalk(walk, lang, () => {});
     if (!r.online) throw new Error("no open data service answered");
+    if (oeEnrich) { try { const n = await oeEnrich(r.stops, lang); oeCount += n; if (n) console.log(`  ${walk.id} (${lang}): ${n} inventory text(s) from Onroerend Erfgoed`); } catch (e) { console.log("OE enrich failed:", e.message); } }
     let n = 0;
     for (const s of r.live) { // texts for sights along the way, so phones don't have to ask Wikipedia
       if (n++ >= 50) break;
@@ -171,7 +263,7 @@ export async function run({ fetchImpl = globalThis.fetch, previous = null } = {}
 
   // 4. report
   const secs = Math.round((Date.now() - t0) / 1000);
-  const md = [`### City Walks data build (${MODE})`, "", `${pf.stats.requests} requests to open data services, ${pf.stats.cached} answered from cache, ${secs} s.`, "",
+  const md = [`### City Walks data build (${MODE})`, "", `${pf.stats.requests} requests to open data services, ${pf.stats.cached} answered from cache, ${secs} s. Onroerend Erfgoed texts added: ${oeEnrich ? oeCount : "off"}.`, "",
     "| Walk | Languages | Stops | Positions | Route | Turn-by-turn |", "|---|---|---|---|---|---|",
     ...summary.map((r) => `| ${r.key} | ${r.langs.join(", ") || "❌ failed"}${r.reused ? ` (${r.reused} reused)` : ""} | ${r.stops} | ${r.placed || "–"} | ${r.km ? r.km.toFixed(1) + " km" : "–"} | ${r.turns || (r.reused ? "reused" : "–")} |`)].join("\n");
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + "\n");

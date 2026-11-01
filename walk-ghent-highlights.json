@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "highlights",
-  "title": "Highlights of Ghent",
-  "subtitle": "Most notable heritage in the centre",
-  "description": "The best-known protected monuments and buildings within 900 m of the Belfry, selected from Wikidata and the Flemish heritage inventory. Texts come from Wikipedia.",
+  "title": {
+    "en": "Highlights of Ghent",
+    "nl": "Hoogtepunten van Gent",
+    "fr": "Incontournables de Gand",
+    "de": "Highlights von Gent"
+  },
+  "subtitle": {
+    "en": "Most notable heritage in the centre",
+    "nl": "Het bekendste erfgoed in het centrum",
+    "fr": "Le patrimoine le plus remarquable du centre",
+    "de": "Das bekannteste Kulturerbe im Zentrum"
+  },
+  "description": {
+    "en": "The best-known protected monuments and buildings within 900 m of the Belfry, selected from Wikidata and the Flemish heritage inventory. Texts come from Wikipedia.",
+    "nl": "De bekendste beschermde monumenten en gebouwen binnen 900 m van het Belfort, gekozen uit Wikidata en de Vlaamse erfgoedinventaris. De teksten komen van Wikipedia en de inventaris.",
+    "fr": "Les monuments et bâtiments protégés les plus connus à moins de 900 m du beffroi, choisis dans Wikidata et l'inventaire flamand du patrimoine. Les textes viennent de Wikipédia et de l'inventaire.",
+    "de": "Die bekanntesten Denkmäler und Gebäude im Umkreis von 900 m um den Belfried, ausgewählt aus Wikidata und dem flämischen Denkmalinventar. Die Texte stammen aus Wikipedia und dem Inventar."
+  },
   "lang": "en",
   "generator": {
     "type": "wikidata",

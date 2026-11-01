@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "all-murals",
-  "title": "Every comic mural in the centre",
-  "subtitle": "Straight from the City of Brussels open data",
-  "description": "All murals of the official Comic Book Route within about 1.3 km of the Grand-Place, put in a walkable order automatically. Long: pick and choose.",
+  "title": {
+    "en": "Every comic mural in the centre",
+    "nl": "Alle stripmuren in het centrum",
+    "fr": "Toutes les fresques BD du centre",
+    "de": "Alle Comic-Wandbilder im Zentrum"
+  },
+  "subtitle": {
+    "en": "Straight from the City of Brussels open data",
+    "nl": "Rechtstreeks uit de open data van de Stad Brussel",
+    "fr": "Directement des données ouvertes de la Ville de Bruxelles",
+    "de": "Direkt aus den offenen Daten der Stadt Brüssel"
+  },
+  "description": {
+    "en": "All murals of the official Comic Book Route within about 1.3 km of the Grand-Place, put in a walkable order automatically. Long: pick and choose.",
+    "nl": "Alle muren van het officiële Stripparcours binnen zo'n 1,3 km van de Grote Markt, automatisch in een wandelbare volgorde gezet. Lang: kies zelf wat je wilt zien.",
+    "fr": "Toutes les fresques du Parcours BD officiel à environ 1,3 km de la Grand-Place, mises automatiquement dans un ordre de marche. Long : faites votre choix.",
+    "de": "Alle Wandbilder der offiziellen Comic-Route im Umkreis von etwa 1,3 km um den Grand-Place, automatisch in eine begehbare Reihenfolge gebracht. Lang: suchen Sie sich aus, was Sie sehen möchten."
+  },
   "lang": "fr",
   "generator": {
     "type": "ods",

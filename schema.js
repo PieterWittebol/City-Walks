@@ -7,11 +7,34 @@ const { str, num, okLat, okLon, safeUrl, safeImg } = U;
 const cleanId = (v, d) => str(v, 60).replace(/[^a-z0-9_-]/gi, "") || d;
 const strList = (v, n = 10, max = 60) => Array.isArray(v) ? v.map((x) => str(x, max)).filter(Boolean).slice(0, n) : [];
 const okPoint = (p) => Array.isArray(p) && p.length === 2 && okLat(p[0]) && okLon(p[1]);
-function cleanStop(s, i, ids) {
+// Texts can be one string (in the walk's language) or one per language: { "en": "…", "nl": "…" }
+function cleanTexts(t, max) {
+  if (!t || typeof t !== "object" || Array.isArray(t)) return null;
+  const o = {}; for (const l of Src.LANGS) { const v = str(t[l], max).trim(); if (v) o[l] = v; }
+  return Object.keys(o).length ? o : null;
+}
+function pickText(texts, lang, fallbackLang) {
+  if (!texts) return null;
+  if (texts[lang]) return { text: texts[lang], lang };
+  for (const l of [fallbackLang, "en", ...Src.LANGS]) if (l && texts[l]) return { text: texts[l], lang: l };
+  return null;
+}
+// A multilingual field: a plain string (in the file's language) or { "en": "…", "nl": "…" }.
+// ml(v, max, lang) → { text: string in `lang` (or best fallback), all: map or null }
+function ml(v, max, lang, fallbackLang) {
+  const all = cleanTexts(v, max);
+  if (all) { const p = pickText(all, lang, fallbackLang); return { text: p ? p.text : "", lang: p ? p.lang : null, all }; }
+  return { text: str(v, max), lang: null, all: null };
+}
+const hasText = (v) => v && typeof v === "object" ? Object.values(v).some((x) => str(x).trim()) : !!str(v).trim();
+const KINDS_STOP = ["ods-mural", "osm-art"];
+function cleanStop(s, i, ids, lang = "en") {
   let id = cleanId(s.id, "stop" + i); while (ids.has(id)) id += "_"; ids.add(id);
+  const texts = cleanTexts(s.text, 3000), T = ml(s.title, 120, lang, lang);
   return {
-    id, title: str(s.title, 120), artist: str(s.artist, 120), year: str(s.year, 20), address: str(s.address, 160),
-    lat: s.lat, lon: s.lon, text: str(s.text, 3000), textLang: Src.LANGS.includes(s.textLang) ? s.textLang : null, img: safeImg(s.image || s.img),
+    texts, titles: T.all, kind: KINDS_STOP.includes(s.kind) ? s.kind : undefined, artistQid: /^Q\d{1,12}$/.test(s.artistQid || "") ? s.artistQid : undefined,
+    id, title: T.text, artist: str(s.artist, 120), year: str(s.year, 20), address: str(s.address, 160),
+    lat: s.lat, lon: s.lon, text: texts ? "" : str(s.text, 3000), textLang: Src.LANGS.includes(s.textLang) ? s.textLang : null, img: safeImg(s.image || s.img),
     match: strList(s.match, 10, 40), artworkType: ["statue", "mural"].includes(s.artworkType) ? s.artworkType : null, fixed: s.fixed === true,
     wiki: strList(s.wiki, 6, 80), wikipedia: /^[a-z]{2}:.{1,200}$/.test(s.wikipedia || "") ? s.wikipedia : null,
     wikidata: /^Q\d{1,12}$/.test(s.wikidata || "") ? s.wikidata : null,
@@ -29,17 +52,19 @@ function cleanSource(g) {
 function cleanWalk(w) {
   if (!w || typeof w !== "object") throw new Error("not a walk file");
   const ids = new Set();
-  const stops = (Array.isArray(w.stops) ? w.stops : []).filter((s) => s && okLat(s.lat) && okLon(s.lon) && s.title).map((s, i) => cleanStop(s, i, ids));
+  const lang = Src.LANGS.includes(w.lang) ? w.lang : "en";
+  const stops = (Array.isArray(w.stops) ? w.stops : []).filter((s) => s && okLat(s.lat) && okLon(s.lon) && hasText(s.title)).map((s, i) => cleanStop(s, i, ids, lang));
   const generator = cleanSource(w.generator);
   if (!stops.length && !generator) throw new Error("walk has no stops");
   return {
-    id: cleanId(w.id, "walk"), title: str(w.title, 120), subtitle: str(w.subtitle, 120), description: str(w.description, 1000),
-    lang: Src.LANGS.includes(w.lang) ? w.lang : "en", geocodeSuffix: str(w.geocodeSuffix, 120),
+    id: cleanId(w.id, "walk"), title: ml(w.title, 120, lang, lang).text, subtitle: ml(w.subtitle, 120, lang, lang).text, description: ml(w.description, 1000, lang, lang).text,
+    i18n: { title: cleanTexts(w.title, 120), subtitle: cleanTexts(w.subtitle, 120), description: cleanTexts(w.description, 1000) },
+    lang, geocodeSuffix: str(w.geocodeSuffix, 120),
     start: okPoint(w.start) ? { lat: w.start[0], lon: w.start[1] } : null,
     stops, generator,
     matchSources: (Array.isArray(w.matchSources) ? w.matchSources : []).map((m) => cleanSource({ ...m, center: [0, 0] })).filter((m) => m && m.type === "ods"),
-    sights: (Array.isArray(w.sights) ? w.sights : []).filter((s) => s && okLat(s.lat) && okLon(s.lon) && s.title)
-      .map((s) => ({ title: str(s.title, 120), lat: s.lat, lon: s.lon, text: str(s.text, 1500), curated: true })),
+    sights: (Array.isArray(w.sights) ? w.sights : []).filter((s) => s && okLat(s.lat) && okLon(s.lon) && hasText(s.title))
+      .map((s) => { const texts = cleanTexts(s.text, 1500), T = ml(s.title, 120, lang, lang); return { title: T.text, titles: T.all, lat: s.lat, lon: s.lon, text: texts ? "" : str(s.text, 1500), texts, curated: true }; }),
   };
 }
 const validFile = (f) => typeof f === "string" && /^walk-[a-z0-9-]+\.json$/.test(f);
@@ -49,7 +74,8 @@ const KINDS = ["comics", "street-art", "heritage", "highlights"];
 function checkWalk(w) {
   const errs = [];
   if (!/^[a-z0-9_-]{1,60}$/.test(w.id || "")) errs.push("Walk id: use 1–60 lowercase letters, digits, - or _.");
-  if (!str(w.title).trim()) errs.push("The walk needs a title.");
+  if (!hasText(w.title)) errs.push("The walk needs a title.");
+  for (const [f, max] of [["title", 120], ["subtitle", 120], ["description", 1000]]) if (w[f] && typeof w[f] === "object" && Object.keys(w[f]).some((l) => !Src.LANGS.includes(l))) errs.push(`Walk ${f}: languages must be ${Src.LANGS.join(", ")}.`);
   if (w.lang && !Src.LANGS.includes(w.lang)) errs.push("Language must be one of " + Src.LANGS.join(", ") + ".");
   const stops = Array.isArray(w.stops) ? w.stops : [];
   if (w.generator) {
@@ -63,15 +89,17 @@ function checkWalk(w) {
   } else if (!stops.length) errs.push("Add at least one stop.");
   const ids = new Set();
   stops.forEach((s, i) => {
-    const n = `Stop ${i + 1}${s.title ? " (" + str(s.title, 40) + ")" : ""}: `;
-    if (!str(s.title).trim()) errs.push(n + "needs a title.");
+    const n = `Stop ${i + 1}${hasText(s.title) ? " (" + str(ml(s.title, 40, w.lang || "en").text) + ")" : ""}: `;
+    if (!hasText(s.title)) errs.push(n + "needs a title.");
     if (!okLat(s.lat) || !okLon(s.lon)) errs.push(n + "position is missing or invalid.");
     if (!/^[a-z0-9_-]{1,60}$/i.test(s.id || "")) errs.push(n + "id: use letters, digits, - or _.");
     else if (ids.has(s.id)) errs.push(n + "id '" + s.id + "' is used twice."); else ids.add(s.id);
     if (s.image && !safeImg(s.image)) errs.push(n + "image must be a file in the repository or an upload.wikimedia.org link.");
     if (s.wikipedia && !/^[a-z]{2}:.{1,200}$/.test(s.wikipedia)) errs.push(n + "Wikipedia reference must look like nl:Title.");
     if (s.wikidata && !/^Q\d{1,12}$/.test(s.wikidata)) errs.push(n + "Wikidata id must look like Q123.");
-    if (str(s.text).length > 3000) errs.push(n + "text is longer than 3000 characters.");
+    const tx = s.text && typeof s.text === "object" ? Object.values(s.text) : [s.text];
+    if (tx.some((t) => str(t).length > 3000)) errs.push(n + "text is longer than 3000 characters.");
+    if (s.text && typeof s.text === "object" && Object.keys(s.text).some((l) => !Src.LANGS.includes(l))) errs.push(n + "text languages must be " + Src.LANGS.join(", ") + ".");
   });
   try { cleanWalk(w); } catch (e) { errs.push(e.message); }
   return errs;
@@ -80,10 +108,10 @@ function checkCities(c) {
   const errs = [], ids = new Set(), files = new Set();
   if (!c || !Array.isArray(c.cities)) return ["cities.json has no cities list."];
   c.cities.forEach((city, i) => {
-    const n = `City ${i + 1}${city.name ? " (" + str(city.name, 30) + ")" : ""}: `;
+    const n = `City ${i + 1}${hasText(city.name) ? " (" + ml(city.name, 30, "en").text + ")" : ""}: `;
     if (!/^[a-z0-9_-]{1,60}$/.test(city.id || "")) errs.push(n + "id: use lowercase letters, digits, - or _.");
     else if (ids.has(city.id)) errs.push(n + "id is used twice."); else ids.add(city.id);
-    if (!str(city.name).trim()) errs.push(n + "needs a name.");
+    if (!hasText(city.name)) errs.push(n + "needs a name.");
     if (!okLat(city.lat) || !okLon(city.lon)) errs.push(n + "centre position is invalid.");
     const wids = new Set();
     (city.walks || []).forEach((w) => {
@@ -135,5 +163,5 @@ function cleanBuilt(b) {
   return { hash: str(b.hash, 20), lang: Src.LANGS.includes(b.lang) ? b.lang : null, builtAt: str(b.builtAt, 40), legs,
     stops, line: line.length > 1 ? line : stops.map((p) => ({ lat: p.lat, lon: p.lon })), km: typeof b.km === "number" && isFinite(b.km) ? b.km : null, live };
 }
-window.Schema = { cleanLeg, cleanLegs, cleanBuilt, cleanId, strList, okPoint, cleanStop, cleanSource, cleanWalk, validFile, checkWalk, checkCities, KINDS };
+window.Schema = { ml, hasText, cleanTexts, pickText, cleanLeg, cleanLegs, cleanBuilt, cleanId, strList, okPoint, cleanStop, cleanSource, cleanWalk, validFile, checkWalk, checkCities, KINDS };
 })();

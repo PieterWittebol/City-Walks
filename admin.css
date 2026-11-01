@@ -63,3 +63,5 @@ details{margin-top:14px} summary{cursor:pointer;font-weight:600}
 #toast{position:fixed;left:12px;right:12px;bottom:calc(var(--sb) + 80px);z-index:3000;background:#111;color:#fff;border-radius:12px;padding:12px 14px;max-width:736px;margin:0 auto}
 code{background:#eee;border-radius:4px;padding:0 4px;font-size:12px}
 button.out{background:transparent;color:var(--y);border:1px solid var(--y);padding:5px 10px;font-size:13px}
+.mlfield details.trans{margin:-4px 0 8px;padding-left:8px;border-left:3px solid #eee}
+.mlfield summary{font-size:13px;color:var(--blue)}

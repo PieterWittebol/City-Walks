@@ -81,3 +81,5 @@ select{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid #ccc;bac
 #navTitle{white-space:normal;line-height:1.2}
 #sheet.arrived #navLabel{color:var(--green);font-weight:800}
 .offscreen{position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden}
+.langnote{color:#a15c00;font-weight:600}
+#dText{white-space:pre-line}

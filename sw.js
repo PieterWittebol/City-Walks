@@ -1,5 +1,5 @@
 /* Service worker: app files network-first (so updates show up), map tiles you've seen cache-first. */
-const VERSION = "v8";
+const VERSION = "v10";
 const APP = "app-" + VERSION, TILES = "tiles-v1", MAX_TILES = 1500;
 const SHELL = ["./", "index.html", "util.js", "sources.js", "schema.js", "builder.js", "nav.js", "app.js", "app.css", "leaflet.js", "leaflet.css", "icon.svg", "icon-180.png", "icon-512.png", "manifest.webmanifest", "cities.json"];
 

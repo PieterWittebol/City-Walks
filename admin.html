@@ -91,9 +91,9 @@
   </section>
 
   <section id="tDetails" class="tab hidden">
-    <label>Title<input id="wTitle" maxlength="120"></label>
-    <label>Subtitle<input id="wSubtitle" maxlength="120"></label>
-    <label>Description<textarea id="wDesc" rows="4" maxlength="1000"></textarea></label>
+    <div id="wTitleBox"></div>
+    <div id="wSubtitleBox"></div>
+    <div id="wDescBox"></div>
     <label>Kind<select id="wKind"><option value="">—</option><option value="comics">Comic strips</option><option value="street-art">Street art</option><option value="heritage">Heritage</option><option value="highlights">Highlights</option></select></label>
     <label>Language of own texts<select id="wLang"><option value="en">English</option><option value="nl">Nederlands</option><option value="fr">Français</option><option value="de">Deutsch</option></select></label>
     <p class="small">File: <code id="wFile"></code></p>
@@ -110,11 +110,12 @@
 <div id="stopForm" class="sheet hidden">
   <div class="card">
     <h2 id="sfHead">Stop</h2>
-    <label>Title<input id="sTitle" maxlength="120"></label>
+    <div id="sTitleBox"></div>
     <div class="two"><label>Latitude<input id="sLat" type="number" step="0.00001"></label><label>Longitude<input id="sLon" type="number" step="0.00001"></label></div>
     <label class="chk"><input type="checkbox" id="sFixed"> Exact position (don't let the app move it)</label>
     <label>Wikipedia keywords <span class="small">(comma separated; finds the article near this point)</span><input id="sWiki" spellcheck="false"></label>
-    <label>Text <span class="small">(empty = use the Wikipedia summary)</span><textarea id="sText" rows="6" maxlength="3000"></textarea></label>
+    <div id="sTextBox"></div>
+    <p class="small">Empty text = the Wikipedia summary in that language is used. Empty translation of the title = the Wikipedia article title in that language.</p>
     <div class="two"><label>Artist<input id="sArtist" maxlength="120"></label><label>Year<input id="sYear" maxlength="20"></label></div>
     <label>Address<input id="sAddress" maxlength="160"></label>
     <label>Mural match words <span class="small">(comma separated)</span><input id="sMatch" spellcheck="false"></label>

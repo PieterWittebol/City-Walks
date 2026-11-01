@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "street-art",
-  "title": "Street art in Ghent",
-  "subtitle": "Murals and graffiti mapped on OpenStreetMap",
-  "description": "Murals and graffiti within 1.5 km of the centre, as mapped by OpenStreetMap volunteers, in a walkable order. Named works come first; missing a piece? You can add it on openstreetmap.org.",
+  "title": {
+    "en": "Street art in Ghent",
+    "nl": "Street art in Gent",
+    "fr": "Street art à Gand",
+    "de": "Street-Art in Gent"
+  },
+  "subtitle": {
+    "en": "Murals and graffiti mapped on OpenStreetMap",
+    "nl": "Muurschilderingen en graffiti uit OpenStreetMap",
+    "fr": "Fresques et graffitis cartographiés sur OpenStreetMap",
+    "de": "Wandbilder und Graffiti aus OpenStreetMap"
+  },
+  "description": {
+    "en": "Murals and graffiti within 1.5 km of the centre, as mapped by OpenStreetMap volunteers, in a walkable order. Named works come first; missing a piece? You can add it on openstreetmap.org.",
+    "nl": "Muurschilderingen en graffiti binnen 1,5 km van het centrum, zoals vrijwilligers ze in OpenStreetMap intekenden, in een wandelbare volgorde. Werken met een naam komen eerst; mis je er een? Voeg ze toe op openstreetmap.org.",
+    "fr": "Fresques et graffitis à moins de 1,5 km du centre, tels que cartographiés par les bénévoles d'OpenStreetMap, dans un ordre de marche. Les œuvres nommées d'abord ; il en manque une ? Ajoutez-la sur openstreetmap.org.",
+    "de": "Wandbilder und Graffiti im Umkreis von 1,5 km um das Zentrum, wie sie Freiwillige in OpenStreetMap eingetragen haben, in begehbarer Reihenfolge. Benannte Werke zuerst; fehlt eines? Tragen Sie es auf openstreetmap.org ein."
+  },
   "lang": "en",
   "generator": {
     "type": "osm-art",

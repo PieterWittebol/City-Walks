@@ -4,15 +4,30 @@
   "cities": [
     {
       "id": "brussels",
-      "name": "Brussels",
+      "name": {
+        "en": "Brussels",
+        "nl": "Brussel",
+        "fr": "Bruxelles",
+        "de": "Brüssel"
+      },
       "lat": 50.8467,
       "lon": 4.3525,
       "walks": [
         {
           "id": "comics-centre",
           "file": "walk-brussels-comics.json",
-          "title": "Comic Strip Walk",
-          "subtitle": "Historic centre",
+          "title": {
+            "en": "Comic Strip Walk",
+            "nl": "Stripwandeling",
+            "fr": "Parcours BD",
+            "de": "Comic-Spaziergang"
+          },
+          "subtitle": {
+            "en": "Historic centre",
+            "nl": "Historisch centrum",
+            "fr": "Centre historique",
+            "de": "Historisches Zentrum"
+          },
           "kind": "comics",
           "stops": 25,
           "distanceKm": 4
@@ -20,16 +35,36 @@
         {
           "id": "all-murals",
           "file": "walk-brussels-all-murals.json",
-          "title": "Every comic mural in the centre",
-          "subtitle": "City of Brussels open data",
+          "title": {
+            "en": "Every comic mural in the centre",
+            "nl": "Alle stripmuren in het centrum",
+            "fr": "Toutes les fresques BD du centre",
+            "de": "Alle Comic-Wandbilder im Zentrum"
+          },
+          "subtitle": {
+            "en": "Straight from the City of Brussels open data",
+            "nl": "Rechtstreeks uit de open data van de Stad Brussel",
+            "fr": "Directement des données ouvertes de la Ville de Bruxelles",
+            "de": "Direkt aus den offenen Daten der Stadt Brüssel"
+          },
           "kind": "comics",
           "generated": true
         },
         {
           "id": "highlights",
           "file": "walk-brussels-highlights.json",
-          "title": "Highlights of Brussels",
-          "subtitle": "Wikidata + Wikipedia",
+          "title": {
+            "en": "Highlights of Brussels",
+            "nl": "Hoogtepunten van Brussel",
+            "fr": "Incontournables de Bruxelles",
+            "de": "Highlights von Brüssel"
+          },
+          "subtitle": {
+            "en": "Most notable heritage around the Grand-Place",
+            "nl": "Het bekendste erfgoed rond de Grote Markt",
+            "fr": "Le patrimoine le plus remarquable autour de la Grand-Place",
+            "de": "Das bekannteste Kulturerbe rund um den Grand-Place"
+          },
           "kind": "highlights",
           "generated": true
         }
@@ -37,15 +72,30 @@
     },
     {
       "id": "ghent",
-      "name": "Ghent",
+      "name": {
+        "en": "Ghent",
+        "nl": "Gent",
+        "fr": "Gand",
+        "de": "Gent"
+      },
       "lat": 51.0543,
       "lon": 3.7253,
       "walks": [
         {
           "id": "medieval",
           "file": "walk-ghent-medieval.json",
-          "title": "Medieval Ghent",
-          "subtitle": "Cathedral, belfry, castle and quays",
+          "title": {
+            "en": "Medieval Ghent",
+            "nl": "Middeleeuws Gent",
+            "fr": "Gand médiévale",
+            "de": "Mittelalterliches Gent"
+          },
+          "subtitle": {
+            "en": "Cathedral, belfry, castle and the old harbour",
+            "nl": "Kathedraal, belfort, burcht en de oude haven",
+            "fr": "Cathédrale, beffroi, château et ancien port",
+            "de": "Kathedrale, Belfried, Burg und alter Hafen"
+          },
           "kind": "heritage",
           "stops": 13,
           "distanceKm": 2.5
@@ -53,16 +103,36 @@
         {
           "id": "street-art",
           "file": "walk-ghent-street-art.json",
-          "title": "Street art in Ghent",
-          "subtitle": "OpenStreetMap",
+          "title": {
+            "en": "Street art in Ghent",
+            "nl": "Street art in Gent",
+            "fr": "Street art à Gand",
+            "de": "Street-Art in Gent"
+          },
+          "subtitle": {
+            "en": "Murals and graffiti mapped on OpenStreetMap",
+            "nl": "Muurschilderingen en graffiti uit OpenStreetMap",
+            "fr": "Fresques et graffitis cartographiés sur OpenStreetMap",
+            "de": "Wandbilder und Graffiti aus OpenStreetMap"
+          },
           "kind": "street-art",
           "generated": true
         },
         {
           "id": "highlights",
           "file": "walk-ghent-highlights.json",
-          "title": "Highlights of Ghent",
-          "subtitle": "Wikidata + Wikipedia",
+          "title": {
+            "en": "Highlights of Ghent",
+            "nl": "Hoogtepunten van Gent",
+            "fr": "Incontournables de Gand",
+            "de": "Highlights von Gent"
+          },
+          "subtitle": {
+            "en": "Most notable heritage in the centre",
+            "nl": "Het bekendste erfgoed in het centrum",
+            "fr": "Le patrimoine le plus remarquable du centre",
+            "de": "Das bekannteste Kulturerbe im Zentrum"
+          },
           "kind": "highlights",
           "generated": true
         }
@@ -70,15 +140,30 @@
     },
     {
       "id": "antwerp",
-      "name": "Antwerp",
+      "name": {
+        "en": "Antwerp",
+        "nl": "Antwerpen",
+        "fr": "Anvers",
+        "de": "Antwerpen"
+      },
       "lat": 51.2194,
       "lon": 4.4025,
       "walks": [
         {
           "id": "old-town",
           "file": "walk-antwerp-old-town.json",
-          "title": "Old Antwerp",
-          "subtitle": "From Central Station to Het Steen",
+          "title": {
+            "en": "Old Antwerp",
+            "nl": "Oud Antwerpen",
+            "fr": "Le vieil Anvers",
+            "de": "Altes Antwerpen"
+          },
+          "subtitle": {
+            "en": "From Central Station to Het Steen",
+            "nl": "Van het Centraal Station tot Het Steen",
+            "fr": "De la gare centrale au Steen",
+            "de": "Vom Hauptbahnhof zum Steen"
+          },
           "kind": "heritage",
           "stops": 14,
           "distanceKm": 3.3
@@ -86,16 +171,36 @@
         {
           "id": "highlights",
           "file": "walk-antwerp-highlights.json",
-          "title": "Highlights of Antwerp",
-          "subtitle": "Wikidata + Wikipedia",
+          "title": {
+            "en": "Highlights of Antwerp",
+            "nl": "Hoogtepunten van Antwerpen",
+            "fr": "Incontournables d'Anvers",
+            "de": "Highlights von Antwerpen"
+          },
+          "subtitle": {
+            "en": "Most notable heritage in the old town",
+            "nl": "Het bekendste erfgoed in de oude stad",
+            "fr": "Le patrimoine le plus remarquable de la vieille ville",
+            "de": "Das bekannteste Kulturerbe der Altstadt"
+          },
           "kind": "highlights",
           "generated": true
         },
         {
           "id": "street-art",
           "file": "walk-antwerp-street-art.json",
-          "title": "Street art in Antwerp",
-          "subtitle": "OpenStreetMap",
+          "title": {
+            "en": "Street art in Antwerp",
+            "nl": "Street art in Antwerpen",
+            "fr": "Street art à Anvers",
+            "de": "Street-Art in Antwerpen"
+          },
+          "subtitle": {
+            "en": "Murals and graffiti mapped on OpenStreetMap",
+            "nl": "Muurschilderingen en graffiti uit OpenStreetMap",
+            "fr": "Fresques et graffitis cartographiés sur OpenStreetMap",
+            "de": "Wandbilder und Graffiti aus OpenStreetMap"
+          },
           "kind": "street-art",
           "generated": true
         }

@@ -1,19 +1,44 @@
 {
   "schema": 2,
   "id": "comics-centre",
-  "title": "Comic Strip Walk",
-  "subtitle": "Historic centre",
-  "description": "25 comic strip murals from the Comics Art Museum past the Grand-Place and Manneken Pis to Saint-Géry and Dansaert. Positions are checked against the City of Brussels open data and OpenStreetMap.",
+  "title": {
+    "en": "Comic Strip Walk",
+    "nl": "Stripwandeling",
+    "fr": "Parcours BD",
+    "de": "Comic-Spaziergang"
+  },
+  "subtitle": {
+    "en": "Historic centre",
+    "nl": "Historisch centrum",
+    "fr": "Centre historique",
+    "de": "Historisches Zentrum"
+  },
+  "description": {
+    "en": "25 comic strip murals from the Comics Art Museum past the Grand-Place and Manneken Pis to Saint-Géry and Dansaert. Positions are checked against the City of Brussels open data and OpenStreetMap.",
+    "nl": "25 stripmuren, van het Stripmuseum langs de Grote Markt en Manneken Pis naar Sint-Goriks en de Dansaertbuurt. De posities worden gecontroleerd met de open data van de Stad Brussel en OpenStreetMap.",
+    "fr": "25 fresques BD, du Centre belge de la Bande dessinée à Saint-Géry et au quartier Dansaert, en passant par la Grand-Place et Manneken-Pis. Les positions sont vérifiées grâce aux données ouvertes de la Ville de Bruxelles et à OpenStreetMap.",
+    "de": "25 Comic-Wandbilder, vom Comic-Zentrum über den Grand-Place und das Manneken Pis bis nach Saint-Géry und ins Dansaert-Viertel. Die Positionen werden mit den offenen Daten der Stadt Brüssel und OpenStreetMap abgeglichen."
+  },
   "lang": "en",
   "geocodeSuffix": "1000 Bruxelles, Belgium",
   "stops": [
     {
       "id": "cbbd",
-      "title": "Comics Art Museum",
+      "title": {
+        "en": "Comics Art Museum",
+        "nl": "Stripmuseum (Belgisch Stripcentrum)",
+        "fr": "Centre belge de la Bande dessinée",
+        "de": "Belgisches Comic-Zentrum"
+      },
       "address": "Rue des Sables 20",
       "lat": 50.8512,
       "lon": 4.3596,
-      "text": "The Belgian Comic Strip Center sits in the Waucquez warehouse, an Art Nouveau textile store designed by Victor Horta (1906). A good start: the museum covers the history of Belgian comics, from Tintin and Spirou to today's graphic novels.",
+      "text": {
+        "en": "The Belgian Comic Strip Center sits in the Waucquez warehouse, an Art Nouveau textile store designed by Victor Horta (1906). A good start: the museum covers the history of Belgian comics, from Tintin and Spirou to today's graphic novels.",
+        "nl": "Het Belgisch Stripcentrum zit in het Waucquez-warenhuis, een art-nouveau-textielwinkel ontworpen door Victor Horta (1906). Een goed begin: het museum vertelt de geschiedenis van de Belgische strip, van Kuifje en Robbedoes tot de graphic novels van vandaag.",
+        "fr": "Le Centre belge de la Bande dessinée occupe les magasins Waucquez, un magasin de tissus Art nouveau conçu par Victor Horta (1906). Un bon point de départ : le musée retrace l'histoire de la BD belge, de Tintin et Spirou aux romans graphiques d'aujourd'hui.",
+        "de": "Das Belgische Comic-Zentrum befindet sich im Waucquez-Kaufhaus, einem Jugendstil-Textilgeschäft von Victor Horta (1906). Ein guter Start: Das Museum erzählt die Geschichte des belgischen Comics, von Tim und Struppi und Spirou bis zu heutigen Graphic Novels."
+      },
       "wiki": [
         "comic strip center",
         "stripmuseum",
@@ -22,7 +47,12 @@
     },
     {
       "id": "gaston-statue",
-      "title": "Gaston Lagaffe (statue)",
+      "title": {
+        "en": "Gaston Lagaffe (statue)",
+        "nl": "Guust Flater (standbeeld)",
+        "fr": "Gaston Lagaffe (statue)",
+        "de": "Gaston (Statue)"
+      },
       "artist": "André Franquin",
       "year": "1996",
       "address": "Boulevard Pachéco / Rue des Sables",
@@ -34,11 +64,21 @@
         "guust"
       ],
       "artworkType": "statue",
-      "text": "Gaston, the lazy, inventive office boy of Spirou magazine, was created by André Franquin in 1957. In the original strips, his disastrous inventions and naps constantly sabotage the office's attempts to sign contracts."
+      "text": {
+        "en": "Gaston, the lazy, inventive office boy of Spirou magazine, was created by André Franquin in 1957. In the original strips, his disastrous inventions and naps constantly sabotage the office's attempts to sign contracts.",
+        "nl": "Guust Flater (Gaston Lagaffe), de luie maar vindingrijke kantoorbediende van het weekblad Robbedoes, werd in 1957 bedacht door André Franquin. In de strips saboteren zijn rampzalige uitvindingen en dutjes voortdurend de pogingen van de redactie om contracten te tekenen.",
+        "fr": "Gaston Lagaffe, le garçon de bureau paresseux et inventif du journal Spirou, a été créé par André Franquin en 1957. Dans les gags, ses inventions désastreuses et ses siestes sabotent sans cesse la signature des contrats de la rédaction.",
+        "de": "Gaston (Jo-Jo), der faule, aber erfinderische Bürobote der Zeitschrift Spirou, wurde 1957 von André Franquin erfunden. In den Comics sabotieren seine katastrophalen Erfindungen und Nickerchen ständig die Versuche der Redaktion, Verträge zu unterschreiben."
+      }
     },
     {
       "id": "scorpion",
-      "title": "Le Scorpion",
+      "title": {
+        "en": "Le Scorpion",
+        "nl": "De Schorpioen",
+        "fr": "Le Scorpion",
+        "de": "Der Skorpion"
+      },
       "artist": "Enrico Marini",
       "year": "2002",
       "address": "Rue du Treurenberg 16",
@@ -49,11 +89,21 @@
         "schorpioen",
         "marini"
       ],
-      "text": "Le Scorpion, written by Stephen Desberg and drawn by Enrico Marini, is a swashbuckling series set in 18th-century Rome, full of papal intrigue. The cathedral of St Michael and St Gudula is just around the corner."
+      "text": {
+        "en": "Le Scorpion, written by Stephen Desberg and drawn by Enrico Marini, is a swashbuckling series set in 18th-century Rome, full of papal intrigue. The cathedral of St Michael and St Gudula is just around the corner.",
+        "nl": "De Schorpioen, geschreven door Stephen Desberg en getekend door Enrico Marini, is een avontuurlijke reeks in het Rome van de 18e eeuw, vol pauselijke intriges. De Sint-Michiels- en Sint-Goedelekathedraal ligt om de hoek.",
+        "fr": "Le Scorpion, écrit par Stephen Desberg et dessiné par Enrico Marini, est une série de cape et d'épée dans la Rome du XVIIIe siècle, pleine d'intrigues papales. La cathédrale Saints-Michel-et-Gudule est juste à côté.",
+        "de": "Der Skorpion, geschrieben von Stephen Desberg und gezeichnet von Enrico Marini, ist eine Mantel-und-Degen-Serie im Rom des 18. Jahrhunderts voller päpstlicher Intrigen. Die Kathedrale St. Michael und St. Gudula liegt gleich um die Ecke."
+      }
     },
     {
       "id": "gaston",
-      "title": "Gaston",
+      "title": {
+        "en": "Gaston",
+        "nl": "Guust Flater",
+        "fr": "Gaston Lagaffe",
+        "de": "Gaston"
+      },
       "artist": "André Franquin",
       "year": "2007",
       "address": "Rue de l'Écuyer 9",
@@ -65,7 +115,12 @@
         "guust"
       ],
       "artworkType": "mural",
-      "text": "A second Gaston, this time on a wall. Franquin, who also shaped Spirou and created the Marsupilami, is considered one of the masters of the Marcinelle school, the dynamic, humorous counterpart to Hergé's 'ligne claire'."
+      "text": {
+        "en": "A second Gaston, this time on a wall. Franquin, who also shaped Spirou and created the Marsupilami, is considered one of the masters of the Marcinelle school, the dynamic, humorous counterpart to Hergé's 'ligne claire'.",
+        "nl": "Een tweede Guust, dit keer op een muur. Franquin, die ook Robbedoes vormgaf en de Marsupilami bedacht, geldt als een van de meesters van de school van Marcinelle: het dynamische, humoristische tegenwicht van Hergés 'klare lijn'.",
+        "fr": "Un second Gaston, sur un mur cette fois. Franquin, qui a aussi façonné Spirou et créé le Marsupilami, est considéré comme l'un des maîtres de l'école de Marcinelle, le pendant dynamique et humoristique de la « ligne claire » d'Hergé.",
+        "de": "Ein zweiter Gaston, diesmal an einer Wand. Franquin, der auch Spirou prägte und das Marsupilami erfand, gilt als einer der Meister der Schule von Marcinelle, dem dynamischen, humorvollen Gegenstück zu Hergés „Ligne claire“."
+      }
     },
     {
       "id": "poje",
@@ -77,11 +132,21 @@
       "match": [
         "poje"
       ],
-      "text": "Poje is a gag series written by Raoul Cauvin, the extremely prolific Belgian scenarist behind Les Tuniques Bleues and Cédric. Look up: the wall is on the corner with Rue des Dominicains."
+      "text": {
+        "en": "Poje is a gag series written by Raoul Cauvin, the extremely prolific Belgian scenarist behind Les Tuniques Bleues and Cédric. Look up: the wall is on the corner with Rue des Dominicains.",
+        "nl": "Poje is een gagreeks geschreven door Raoul Cauvin, de ongelooflijk productieve Belgische scenarist achter De Blauwbloezen en Cedric. Kijk omhoog: de muur staat op de hoek met de Predikherenstraat.",
+        "fr": "Poje est une série de gags écrite par Raoul Cauvin, le scénariste belge extrêmement prolifique des Tuniques Bleues et de Cédric. Levez les yeux : le mur se trouve au coin de la rue des Dominicains.",
+        "de": "Poje ist eine Gag-Serie von Raoul Cauvin, dem äußerst produktiven belgischen Szenaristen der Blauen Boys und von Cedric. Schauen Sie nach oben: Die Wand liegt an der Ecke zur Rue des Dominicains."
+      }
     },
     {
       "id": "tintin",
-      "title": "Tintin – The Calculus Affair",
+      "title": {
+        "en": "Tintin – The Calculus Affair",
+        "nl": "Kuifje – De Zaak Zonnebloem",
+        "fr": "Tintin – L'Affaire Tournesol",
+        "de": "Tim und Struppi – Der Fall Bienlein"
+      },
       "artist": "Hergé",
       "year": "2005",
       "address": "Rue de l'Étuve 33",
@@ -93,7 +158,12 @@
         "hergé",
         "herge"
       ],
-      "text": "Tintin, Snowy and Captain Haddock escaping down a fire escape, a scene from The Calculus Affair (1956). Hergé (Georges Remi) was born in Etterbeek, Brussels, in 1907; Tintin first appeared in 1929. Manneken Pis is a few steps further down this street."
+      "text": {
+        "en": "Tintin, Snowy and Captain Haddock escaping down a fire escape, a scene from The Calculus Affair (1956). Hergé (Georges Remi) was born in Etterbeek, Brussels, in 1907; Tintin first appeared in 1929. Manneken Pis is a few steps further down this street.",
+        "nl": "Kuifje, Bobbie en kapitein Haddock vluchten via een brandtrap, een scène uit De Zaak Zonnebloem (1956). Hergé (Georges Remi) werd in 1907 geboren in Etterbeek, Brussel; Kuifje verscheen voor het eerst in 1929. Manneken Pis staat een paar stappen verderop in deze straat.",
+        "fr": "Tintin, Milou et le capitaine Haddock s'échappent par un escalier de secours, une scène de L'Affaire Tournesol (1956). Hergé (Georges Remi) est né à Etterbeek, à Bruxelles, en 1907 ; Tintin est apparu pour la première fois en 1929. Manneken-Pis se trouve quelques pas plus bas dans cette rue.",
+        "de": "Tim, Struppi und Kapitän Haddock fliehen über eine Feuertreppe, eine Szene aus Der Fall Bienlein (1956). Hergé (Georges Remi) wurde 1907 in Etterbeek, Brüssel, geboren; Tim erschien zum ersten Mal 1929. Das Manneken Pis steht ein paar Schritte weiter in dieser Straße."
+      }
     },
     {
       "id": "rameau",
@@ -106,11 +176,21 @@
       "match": [
         "rameau"
       ],
-      "text": "Olivier Rameau, by Dany with writer Greg, follows a strait-laced court clerk who ends up in Rêverose, a land where dreams and whims rule. It started in Tintin magazine in 1968."
+      "text": {
+        "en": "Olivier Rameau, by Dany with writer Greg, follows a strait-laced court clerk who ends up in Rêverose, a land where dreams and whims rule. It started in Tintin magazine in 1968.",
+        "nl": "Olivier Rameau, van Dany en scenarist Greg, volgt een stijve griffier die belandt in Rêverose, een land waar dromen en grillen de wet maken. De reeks begon in 1968 in het weekblad Kuifje.",
+        "fr": "Olivier Rameau, de Dany et du scénariste Greg, suit un greffier très sérieux qui se retrouve à Rêverose, un pays où règnent les rêves et la fantaisie. La série a débuté dans le journal Tintin en 1968.",
+        "de": "Olivier Rameau von Dany und Autor Greg folgt einem steifen Gerichtsschreiber, der in Rêverose landet, einem Land, in dem Träume und Launen regieren. Die Serie begann 1968 in der Zeitschrift Tintin."
+      }
     },
     {
       "id": "albert",
-      "title": "Le jeune Albert",
+      "title": {
+        "en": "Young Albert",
+        "nl": "De jonge Albert",
+        "fr": "Le jeune Albert",
+        "de": "Der junge Albert"
+      },
       "artist": "Yves Chaland",
       "year": "2000",
       "address": "Rue des Alexiens 49",
@@ -120,7 +200,12 @@
         "albert",
         "chaland"
       ],
-      "text": "Yves Chaland's 'young Albert' is a cheeky Brussels kid drawn in a refined retro 'ligne claire'. Chaland died in a car accident in 1990, only 33, and remains a cult figure among comics artists."
+      "text": {
+        "en": "Yves Chaland's 'young Albert' is a cheeky Brussels kid drawn in a refined retro 'ligne claire'. Chaland died in a car accident in 1990, only 33, and remains a cult figure among comics artists.",
+        "nl": "De 'jonge Albert' van Yves Chaland is een brutaal Brussels ventje, getekend in een verfijnde retro-'klare lijn'. Chaland kwam in 1990 om bij een auto-ongeluk, amper 33 jaar oud, en is een cultfiguur onder striptekenaars gebleven.",
+        "fr": "Le « jeune Albert » d'Yves Chaland est un gamin bruxellois effronté, dessiné dans une « ligne claire » rétro très raffinée. Chaland est mort dans un accident de voiture en 1990, à 33 ans seulement, et reste une figure culte chez les dessinateurs.",
+        "de": "Yves Chalands „junger Albert“ ist ein frecher Brüsseler Junge im raffinierten Retro-Stil der „Ligne claire“. Chaland starb 1990 mit nur 33 Jahren bei einem Autounfall und ist unter Comiczeichnern bis heute Kult."
+      }
     },
     {
       "id": "stam",
@@ -134,7 +219,12 @@
         "stam",
         "pilou"
       ],
-      "text": "This one is inside the café 'In 't Goudblommeke in Papier', so peek through the window or go in for a drink. The café was a regular haunt of René Magritte and the Brussels surrealists."
+      "text": {
+        "en": "This one is inside the café 'In 't Goudblommeke in Papier', so peek through the window or go in for a drink. The café was a regular haunt of René Magritte and the Brussels surrealists.",
+        "nl": "Deze hangt binnen in café 'In 't Goudblommeke in Papier': kijk door het raam of ga iets drinken. Het café was een vaste stek van René Magritte en de Brusselse surrealisten.",
+        "fr": "Celle-ci se trouve à l'intérieur du café « In 't Goudblommeke in Papier » : jetez un œil par la fenêtre ou entrez boire un verre. Le café était un repaire de René Magritte et des surréalistes bruxellois.",
+        "de": "Dieses Bild hängt im Café „In 't Goudblommeke in Papier“: Schauen Sie durchs Fenster oder gehen Sie auf ein Getränk hinein. Das Café war Stammlokal von René Magritte und den Brüsseler Surrealisten."
+      }
     },
     {
       "id": "monsieurjean",
@@ -149,7 +239,12 @@
         "dupuy",
         "berberian"
       ],
-      "text": "Monsieur Jean, by the duo Philippe Dupuy and Charles Berberian, follows a Parisian writer's everyday life, love life and anxieties. The pair received the Grand Prix of the Angoulême festival in 2008."
+      "text": {
+        "en": "Monsieur Jean, by the duo Philippe Dupuy and Charles Berberian, follows a Parisian writer's everyday life, love life and anxieties. The pair received the Grand Prix of the Angoulême festival in 2008.",
+        "nl": "Monsieur Jean, van het duo Philippe Dupuy en Charles Berberian, volgt het dagelijkse leven, de liefdes en de twijfels van een Parijse schrijver. Het duo kreeg in 2008 de Grand Prix van het stripfestival van Angoulême.",
+        "fr": "Monsieur Jean, du duo Philippe Dupuy et Charles Berberian, suit le quotidien, les amours et les angoisses d'un écrivain parisien. Le duo a reçu le Grand Prix du festival d'Angoulême en 2008.",
+        "de": "Monsieur Jean vom Duo Philippe Dupuy und Charles Berberian erzählt vom Alltag, den Lieben und Ängsten eines Pariser Schriftstellers. Das Duo erhielt 2008 den Grand Prix des Comicfestivals von Angoulême."
+      }
     },
     {
       "id": "xiii",
@@ -162,7 +257,12 @@
       "match": [
         "xiii"
       ],
-      "text": "XIII opens with an amnesiac man washed up on a beach with only the tattoo 'XIII' as a clue. Jean Van Hamme and William Vance's political thriller started in 1984 and became one of the best-selling Franco-Belgian series."
+      "text": {
+        "en": "XIII opens with an amnesiac man washed up on a beach with only the tattoo 'XIII' as a clue. Jean Van Hamme and William Vance's political thriller started in 1984 and became one of the best-selling Franco-Belgian series.",
+        "nl": "XIII begint met een man zonder geheugen die aanspoelt op een strand, met als enige aanwijzing de tatoeage 'XIII'. De politieke thriller van Jean Van Hamme en William Vance begon in 1984 en werd een van de best verkochte Frans-Belgische reeksen.",
+        "fr": "XIII s'ouvre sur un homme amnésique échoué sur une plage, avec pour seul indice le tatouage « XIII ». Le thriller politique de Jean Van Hamme et William Vance a débuté en 1984 et est devenu l'une des séries franco-belges les plus vendues.",
+        "de": "XIII beginnt mit einem Mann ohne Gedächtnis, der an einen Strand gespült wird, mit dem Tattoo „XIII“ als einzigem Hinweis. Der Politthriller von Jean Van Hamme und William Vance begann 1984 und wurde zu einer der meistverkauften frankobelgischen Serien."
+      }
     },
     {
       "id": "yoko",
@@ -176,7 +276,12 @@
         "yoko",
         "tsuno"
       ],
-      "text": "Yoko Tsuno, a Japanese electronics engineer, has been solving sci-fi adventures since 1970 in Spirou. Her creator Roger Leloup previously worked in Hergé's studio, where he worked on the technical drawings and vehicles in Tintin."
+      "text": {
+        "en": "Yoko Tsuno, a Japanese electronics engineer, has been solving sci-fi adventures since 1970 in Spirou. Her creator Roger Leloup previously worked in Hergé's studio, where he worked on the technical drawings and vehicles in Tintin.",
+        "nl": "Yoko Tsuno, een Japanse elektronica-ingenieur, beleeft sinds 1970 sciencefictionavonturen in Robbedoes. Haar bedenker Roger Leloup werkte eerder in de studio van Hergé, waar hij de technische tekeningen en voertuigen in Kuifje verzorgde.",
+        "fr": "Yoko Tsuno, ingénieure en électronique japonaise, vit des aventures de science-fiction dans Spirou depuis 1970. Son créateur Roger Leloup a d'abord travaillé dans les studios Hergé, où il s'occupait des dessins techniques et des véhicules de Tintin.",
+        "de": "Yoko Tsuno, eine japanische Elektronikingenieurin, erlebt seit 1970 Science-Fiction-Abenteuer in Spirou. Ihr Schöpfer Roger Leloup arbeitete zuvor im Studio von Hergé, wo er technische Zeichnungen und Fahrzeuge für Tim und Struppi anfertigte."
+      }
     },
     {
       "id": "thorgal",
@@ -190,7 +295,12 @@
         "thorgal",
         "aaricia"
       ],
-      "text": "Thorgal, a Viking-age fantasy saga, began in 1977 (Van Hamme again, with Polish artist Grzegorz Rosiński). The square is named after Frans Anneessens, a guild leader beheaded in 1719 for defending the city's privileges."
+      "text": {
+        "en": "Thorgal, a Viking-age fantasy saga, began in 1977 (Van Hamme again, with Polish artist Grzegorz Rosiński). The square is named after Frans Anneessens, a guild leader beheaded in 1719 for defending the city's privileges.",
+        "nl": "Thorgal, een fantasysaga uit de vikingtijd, begon in 1977 (weer Van Hamme, met de Poolse tekenaar Grzegorz Rosiński). Het plein is genoemd naar Frans Anneessens, een gildemeester die in 1719 werd onthoofd omdat hij de stadsprivileges verdedigde.",
+        "fr": "Thorgal, une saga fantastique à l'époque des Vikings, a commencé en 1977 (encore Van Hamme, avec le dessinateur polonais Grzegorz Rosiński). La place porte le nom de Frans Anneessens, doyen de corporation décapité en 1719 pour avoir défendu les privilèges de la ville.",
+        "de": "Thorgal, eine Fantasy-Saga aus der Wikingerzeit, begann 1977 (wieder Van Hamme, mit dem polnischen Zeichner Grzegorz Rosiński). Der Platz ist nach Frans Anneessens benannt, einem Zunftmeister, der 1719 enthauptet wurde, weil er die Privilegien der Stadt verteidigte."
+      }
     },
     {
       "id": "isabelle",
@@ -203,7 +313,12 @@
       "match": [
         "isabelle"
       ],
-      "text": "Isabelle is a fantasy series by Will (Willy Maltaite), a pillar of Spirou magazine, about a girl caught up in magical adventures. Will was known for his rich backgrounds and colours."
+      "text": {
+        "en": "Isabelle is a fantasy series by Will (Willy Maltaite), a pillar of Spirou magazine, about a girl caught up in magical adventures. Will was known for his rich backgrounds and colours.",
+        "nl": "Isabelle is een fantasyreeks van Will (Willy Maltaite), een steunpilaar van Robbedoes, over een meisje dat in magische avonturen verzeild raakt. Will stond bekend om zijn rijke decors en kleuren.",
+        "fr": "Isabelle est une série fantastique de Will (Willy Maltaite), pilier du journal Spirou, sur une fillette entraînée dans des aventures magiques. Will était réputé pour la richesse de ses décors et de ses couleurs.",
+        "de": "Isabelle ist eine Fantasy-Serie von Will (Willy Maltaite), einer Stütze der Zeitschrift Spirou, über ein Mädchen, das in magische Abenteuer gerät. Will war für seine üppigen Hintergründe und Farben bekannt."
+      }
     },
     {
       "id": "ric",
@@ -217,7 +332,12 @@
         "ric",
         "hochet"
       ],
-      "text": "Ric Hochet is a reporter-detective for the newspaper La Rafale, created by Tibet and writer A.-P. Duchâteau in 1955."
+      "text": {
+        "en": "Ric Hochet is a reporter-detective for the newspaper La Rafale, created by Tibet and writer A.-P. Duchâteau in 1955.",
+        "nl": "Ric Hochet is een reporter-detective van de krant La Rafale, in 1955 bedacht door Tibet en scenarist A.-P. Duchâteau.",
+        "fr": "Ric Hochet est un reporter-détective du journal La Rafale, créé en 1955 par Tibet et le scénariste A.-P. Duchâteau.",
+        "de": "Ric Hochet ist ein Reporter und Detektiv der Zeitung La Rafale, 1955 erfunden von Tibet und Autor A.-P. Duchâteau."
+      }
     },
     {
       "id": "passage",
@@ -231,7 +351,12 @@
         "passage",
         "schuiten"
       ],
-      "text": "A trompe-l'œil by François Schuiten, co-creator (with Benoît Peeters) of Les Cités obscures, a series of imaginary cities full of Brussels-like architecture. Schuiten also designed the Porte de Hal / Hallepoort metro station."
+      "text": {
+        "en": "A trompe-l'œil by François Schuiten, co-creator (with Benoît Peeters) of Les Cités obscures, a series of imaginary cities full of Brussels-like architecture. Schuiten also designed the Porte de Hal / Hallepoort metro station.",
+        "nl": "Een trompe-l'oeil van François Schuiten, mede-bedenker (met Benoît Peeters) van De Duistere Steden, een reeks over denkbeeldige steden vol Brussels aandoende architectuur. Schuiten ontwierp ook het metrostation Hallepoort.",
+        "fr": "Un trompe-l'œil de François Schuiten, cocréateur (avec Benoît Peeters) des Cités obscures, une série de villes imaginaires à l'architecture très bruxelloise. Schuiten a aussi conçu la station de métro Porte de Hal.",
+        "de": "Ein Trompe-l'œil von François Schuiten, Miterfinder (mit Benoît Peeters) der Geheimnisvollen Städte, einer Serie über erfundene Städte voller Brüssel-ähnlicher Architektur. Schuiten gestaltete auch die Metrostation Porte de Hal."
+      }
     },
     {
       "id": "broussaille",
@@ -244,7 +369,12 @@
       "match": [
         "broussaille"
       ],
-      "text": "One of the oldest walls of the route. Broussaille, by Frank Pé, is a young man with a deep love of nature, and the series has a poetic, slow pace."
+      "text": {
+        "en": "One of the oldest walls of the route. Broussaille, by Frank Pé, is a young man with a deep love of nature, and the series has a poetic, slow pace.",
+        "nl": "Een van de oudste muren van de route. Broussaille, van Frank Pé, is een jongeman met een grote liefde voor de natuur; de reeks heeft een poëtisch, rustig tempo.",
+        "fr": "L'un des plus anciens murs du parcours. Broussaille, de Frank Pé, est un jeune homme passionné de nature, dans une série au rythme lent et poétique.",
+        "de": "Eine der ältesten Wände der Route. Broussaille von Frank Pé ist ein junger Mann mit großer Liebe zur Natur, die Serie hat ein poetisches, ruhiges Tempo."
+      }
     },
     {
       "id": "sackville",
@@ -257,11 +387,21 @@
       "match": [
         "sackville"
       ],
-      "text": "Victor Sackville is a British secret agent during World War I, drawn by Francis Carin in a clean 'ligne claire' style. Just across the corner from Broussaille."
+      "text": {
+        "en": "Victor Sackville is a British secret agent during World War I, drawn by Francis Carin in a clean 'ligne claire' style. Just across the corner from Broussaille.",
+        "nl": "Victor Sackville is een Britse geheim agent tijdens de Eerste Wereldoorlog, getekend door Francis Carin in een strakke 'klare lijn'. Net om de hoek van Broussaille.",
+        "fr": "Victor Sackville est un agent secret britannique pendant la Première Guerre mondiale, dessiné par Francis Carin dans une « ligne claire » nette. Juste au coin, en face de Broussaille.",
+        "de": "Victor Sackville ist ein britischer Geheimagent im Ersten Weltkrieg, von Francis Carin in klarer „Ligne claire“ gezeichnet. Gleich um die Ecke von Broussaille."
+      }
     },
     {
       "id": "nero",
-      "title": "Nero",
+      "title": {
+        "en": "Nero",
+        "nl": "Nero",
+        "fr": "Néron",
+        "de": "Nero"
+      },
       "artist": "Marc Sleen",
       "year": "1995",
       "address": "Place Saint-Géry 20",
@@ -271,11 +411,21 @@
         "nero",
         "sleen"
       ],
-      "text": "Nero is a Flemish classic: absurd adventures of a lazy, opinionated anti-hero, published daily in newspapers from 1947 to 2002. Marc Sleen drew it for more than half a century. The market hall here stands where Brussels was born, on a former island in the Senne."
+      "text": {
+        "en": "Nero is a Flemish classic: absurd adventures of a lazy, opinionated anti-hero, published daily in newspapers from 1947 to 2002. Marc Sleen drew it for more than half a century. The market hall here stands where Brussels was born, on a former island in the Senne.",
+        "nl": "Nero is een Vlaamse klassieker: absurde avonturen van een luie, eigenwijze antiheld, van 1947 tot 2002 dagelijks in de krant. Marc Sleen tekende hem meer dan een halve eeuw lang. De markthal hier staat waar Brussel ontstond, op een vroeger eiland in de Zenne.",
+        "fr": "Néron est un classique flamand : les aventures absurdes d'un antihéros paresseux et têtu, publiées chaque jour dans les journaux de 1947 à 2002. Marc Sleen l'a dessiné pendant plus d'un demi-siècle. Les halles se trouvent là où Bruxelles est née, sur une ancienne île de la Senne.",
+        "de": "Nero ist ein flämischer Klassiker: absurde Abenteuer eines faulen, eigensinnigen Antihelden, von 1947 bis 2002 täglich in Zeitungen erschienen. Marc Sleen zeichnete ihn über ein halbes Jahrhundert lang. Die Markthalle steht dort, wo Brüssel entstand, auf einer ehemaligen Insel in der Senne."
+      }
     },
     {
       "id": "ange",
-      "title": "L'Ange",
+      "title": {
+        "en": "The Angel",
+        "nl": "De engel",
+        "fr": "L'Ange",
+        "de": "Der Engel"
+      },
       "artist": "Yslaire",
       "year": "1998",
       "address": "Rue des Chartreux 19",
@@ -286,11 +436,21 @@
         "yslaire",
         "engel"
       ],
-      "text": "An angel by Yslaire (Bernard Hislaire), known for the dark romantic saga Sambre and for 'Le Ciel au-dessus de Bruxelles'. Rue des Chartreux is packed with bars; look up, the wall is high."
+      "text": {
+        "en": "An angel by Yslaire (Bernard Hislaire), known for the dark romantic saga Sambre and for 'Le Ciel au-dessus de Bruxelles'. Rue des Chartreux is packed with bars; look up, the wall is high.",
+        "nl": "Een engel van Yslaire (Bernard Hislaire), bekend van de donkere romantische saga Sambre en van 'De Hemel boven Brussel'. De Kartuizersstraat staat vol cafés; kijk omhoog, de muur is hoog.",
+        "fr": "Un ange d'Yslaire (Bernard Hislaire), connu pour la sombre saga romantique Sambre et pour « Le Ciel au-dessus de Bruxelles ». La rue des Chartreux regorge de bars ; levez les yeux, le mur est haut.",
+        "de": "Ein Engel von Yslaire (Bernard Hislaire), bekannt für die düster-romantische Saga Sambre und für „Le Ciel au-dessus de Bruxelles“. Die Rue des Chartreux ist voller Bars; schauen Sie nach oben, die Wand ist hoch."
+      }
     },
     {
       "id": "asterix",
-      "title": "Astérix",
+      "title": {
+        "en": "Asterix",
+        "nl": "Asterix",
+        "fr": "Astérix",
+        "de": "Asterix"
+      },
       "artist": "Goscinny & Uderzo",
       "year": "2005",
       "address": "Rue de la Buanderie 15",
@@ -300,7 +460,12 @@
         "asterix",
         "astérix"
       ],
-      "text": "The indomitable Gauls, created in 1959 by René Goscinny and Albert Uderzo. Early in his career Goscinny worked for the Brussels press agency World Press, where he met Uderzo."
+      "text": {
+        "en": "The indomitable Gauls, created in 1959 by René Goscinny and Albert Uderzo. Early in his career Goscinny worked for the Brussels press agency World Press, where he met Uderzo.",
+        "nl": "De onverzettelijke Galliërs, in 1959 bedacht door René Goscinny en Albert Uderzo. In het begin van zijn loopbaan werkte Goscinny voor het Brusselse persagentschap World Press, waar hij Uderzo leerde kennen.",
+        "fr": "Les irréductibles Gaulois, créés en 1959 par René Goscinny et Albert Uderzo. Au début de sa carrière, Goscinny a travaillé pour l'agence de presse bruxelloise World Press, où il a rencontré Uderzo.",
+        "de": "Die unbeugsamen Gallier, 1959 von René Goscinny und Albert Uderzo erfunden. Zu Beginn seiner Karriere arbeitete Goscinny für die Brüsseler Presseagentur World Press, wo er Uderzo kennenlernte."
+      }
     },
     {
       "id": "luckyluke",
@@ -315,11 +480,21 @@
         "luke",
         "dalton"
       ],
-      "text": "'The man who shoots faster than his shadow' was created in 1946 by the Belgian artist Morris, later with Goscinny as writer. Lucky Luke famously swapped his cigarette for a blade of grass in 1983."
+      "text": {
+        "en": "'The man who shoots faster than his shadow' was created in 1946 by the Belgian artist Morris, later with Goscinny as writer. Lucky Luke famously swapped his cigarette for a blade of grass in 1983.",
+        "nl": "'De man die sneller schiet dan zijn schaduw' werd in 1946 bedacht door de Belgische tekenaar Morris, later met Goscinny als scenarist. Lucky Luke ruilde in 1983 zijn sigaret voor een grassprietje.",
+        "fr": "« L'homme qui tire plus vite que son ombre » a été créé en 1946 par le dessinateur belge Morris, plus tard avec Goscinny au scénario. Lucky Luke a remplacé sa cigarette par un brin d'herbe en 1983.",
+        "de": "„Der Mann, der schneller schießt als sein Schatten“ wurde 1946 vom belgischen Zeichner Morris erfunden, später mit Goscinny als Autor. 1983 tauschte Lucky Luke seine Zigarette gegen einen Grashalm."
+      }
     },
     {
       "id": "cori",
-      "title": "Cori, de scheepsjongen",
+      "title": {
+        "en": "Cori the Cabin Boy",
+        "nl": "Cori, de scheepsjongen",
+        "fr": "Cori le moussaillon",
+        "de": "Cori, der Schiffsjunge"
+      },
       "artist": "Bob de Moor",
       "year": "1998",
       "address": "Rue des Fabriques 21",
@@ -329,11 +504,21 @@
         "cori",
         "moor"
       ],
-      "text": "Cori is a cabin boy in the 16th-century Dutch fleet. Bob de Moor was Hergé's right hand for decades, and drew many of the backgrounds you know from Tintin."
+      "text": {
+        "en": "Cori is a cabin boy in the 16th-century Dutch fleet. Bob de Moor was Hergé's right hand for decades, and drew many of the backgrounds you know from Tintin.",
+        "nl": "Cori is een scheepsjongen in de Hollandse vloot van de 16e eeuw. Bob de Moor was decennialang de rechterhand van Hergé en tekende veel van de decors die je kent uit Kuifje.",
+        "fr": "Cori est un mousse de la flotte hollandaise au XVIe siècle. Bob de Moor a été pendant des décennies le bras droit d'Hergé et a dessiné bon nombre des décors de Tintin.",
+        "de": "Cori ist ein Schiffsjunge in der niederländischen Flotte des 16. Jahrhunderts. Bob de Moor war jahrzehntelang Hergés rechte Hand und zeichnete viele der Hintergründe aus Tim und Struppi."
+      }
     },
     {
       "id": "nic",
-      "title": "Les rêves de Nic",
+      "title": {
+        "en": "Nic's Dreams",
+        "nl": "De dromen van Nic",
+        "fr": "Les Rêves de Nic",
+        "de": "Nics Träume"
+      },
       "artist": "Hermann",
       "year": "1999",
       "address": "Rue des Fabriques / Rue de la Senne",
@@ -343,7 +528,12 @@
         "nic",
         "hermann"
       ],
-      "text": "A dreamy early series by Hermann, better known for Bernard Prince, Comanche and Jeremiah. Rue de la Senne follows the river that once ran through Brussels; it was covered over in the 1860s–70s to build the central boulevards."
+      "text": {
+        "en": "A dreamy early series by Hermann, better known for Bernard Prince, Comanche and Jeremiah. Rue de la Senne follows the river that once ran through Brussels; it was covered over in the 1860s–70s to build the central boulevards.",
+        "nl": "Een dromerige vroege reeks van Hermann, beter bekend van Bernard Prince, Comanche en Jeremiah. De Zennestraat volgt de rivier die vroeger door Brussel stroomde; die werd in de jaren 1860–70 overkapt om de centrale lanen aan te leggen.",
+        "fr": "Une série rêveuse des débuts d'Hermann, mieux connu pour Bernard Prince, Comanche et Jeremiah. La rue de la Senne suit la rivière qui traversait autrefois Bruxelles ; elle a été voûtée dans les années 1860–70 pour créer les boulevards du centre.",
+        "de": "Eine verträumte frühe Serie von Hermann, besser bekannt für Bernard Prince, Comanche und Jeremiah. Die Rue de la Senne folgt dem Fluss, der einst durch Brüssel floss; er wurde in den 1860er- und 1870er-Jahren überwölbt, um die zentralen Boulevards anzulegen."
+      }
     },
     {
       "id": "blake",
@@ -358,63 +548,153 @@
         "mortimer",
         "jacobs"
       ],
-      "text": "Captain Francis Blake of MI5 and Professor Philip Mortimer first appeared in Tintin magazine in 1946. Edgar P. Jacobs, a former opera singer, also helped Hergé recolour early Tintin albums. End of the walk: the Sainte-Catherine area is a few minutes north."
+      "text": {
+        "en": "Captain Francis Blake of MI5 and Professor Philip Mortimer first appeared in Tintin magazine in 1946. Edgar P. Jacobs, a former opera singer, also helped Hergé recolour early Tintin albums. End of the walk: the Sainte-Catherine area is a few minutes north.",
+        "nl": "Kapitein Francis Blake van MI5 en professor Philip Mortimer verschenen voor het eerst in 1946 in het weekblad Kuifje. Edgar P. Jacobs, een gewezen operazanger, hielp Hergé ook om de eerste Kuifje-albums opnieuw in te kleuren. Einde van de wandeling: de Sint-Katelijnebuurt ligt een paar minuten naar het noorden.",
+        "fr": "Le capitaine Francis Blake du MI5 et le professeur Philip Mortimer sont apparus pour la première fois dans le journal Tintin en 1946. Edgar P. Jacobs, ancien chanteur d'opéra, a aussi aidé Hergé à remettre en couleurs les premiers albums de Tintin. Fin de la promenade : le quartier Sainte-Catherine est à quelques minutes au nord.",
+        "de": "Captain Francis Blake vom MI5 und Professor Philip Mortimer erschienen 1946 zum ersten Mal in der Zeitschrift Tintin. Edgar P. Jacobs, ein früherer Opernsänger, half Hergé auch, die ersten Tim-und-Struppi-Alben neu zu kolorieren. Ende des Spaziergangs: Das Viertel Sainte-Catherine liegt ein paar Minuten nördlich."
+      }
     }
   ],
   "sights": [
     {
-      "title": "Cathedral of St Michael and St Gudula",
+      "title": {
+        "en": "Cathedral of St Michael and St Gudula",
+        "nl": "Sint-Michiels- en Sint-Goedelekathedraal",
+        "fr": "Cathédrale Saints-Michel-et-Gudule",
+        "de": "Kathedrale St. Michael und St. Gudula"
+      },
       "lat": 50.8478,
       "lon": 4.3601,
-      "text": "Brussels' Gothic cathedral, built over roughly three centuries (13th–15th). Royal weddings and funerals take place here."
+      "text": {
+        "en": "Brussels' Gothic cathedral, built over roughly three centuries (13th–15th). Royal weddings and funerals take place here.",
+        "nl": "De gotische kathedraal van Brussel, gebouwd over zo'n drie eeuwen (13e–15e eeuw). Hier vinden koninklijke huwelijken en begrafenissen plaats.",
+        "fr": "La cathédrale gothique de Bruxelles, construite sur environ trois siècles (XIIIe–XVe). Les mariages et funérailles royaux s'y déroulent.",
+        "de": "Brüssels gotische Kathedrale, über rund drei Jahrhunderte erbaut (13.–15. Jh.). Hier finden königliche Hochzeiten und Begräbnisse statt."
+      }
     },
     {
-      "title": "Galeries Royales Saint-Hubert",
+      "title": {
+        "en": "Galeries Royales Saint-Hubert",
+        "nl": "Koninklijke Sint-Hubertusgalerijen",
+        "fr": "Galeries Royales Saint-Hubert",
+        "de": "Königliche Galerien Saint-Hubert"
+      },
       "lat": 50.8478,
       "lon": 4.3547,
-      "text": "Opened in 1847, one of Europe's first covered shopping arcades, designed by Jean-Pierre Cluysenaar. Glass roof, chocolatiers and a small theatre."
+      "text": {
+        "en": "Opened in 1847, one of Europe's first covered shopping arcades, designed by Jean-Pierre Cluysenaar. Glass roof, chocolatiers and a small theatre.",
+        "nl": "Geopend in 1847, een van de eerste overdekte winkelgalerijen van Europa, ontworpen door Jean-Pierre Cluysenaar. Glazen dak, chocolatiers en een klein theater.",
+        "fr": "Inaugurées en 1847, l'une des premières galeries commerçantes couvertes d'Europe, conçue par Jean-Pierre Cluysenaar. Verrière, chocolatiers et un petit théâtre.",
+        "de": "1847 eröffnet, eine der ersten überdachten Einkaufspassagen Europas, entworfen von Jean-Pierre Cluysenaar. Glasdach, Chocolatiers und ein kleines Theater."
+      }
     },
     {
-      "title": "Grand-Place",
+      "title": {
+        "en": "Grand-Place",
+        "nl": "Grote Markt",
+        "fr": "Grand-Place",
+        "de": "Grand-Place"
+      },
       "lat": 50.8467,
       "lon": 4.3524,
-      "text": "UNESCO World Heritage since 1998. The Gothic Town Hall dates from the 15th century; most guild houses were rebuilt in a few years after the French bombardment of 1695."
+      "text": {
+        "en": "UNESCO World Heritage since 1998. The Gothic Town Hall dates from the 15th century; most guild houses were rebuilt in a few years after the French bombardment of 1695.",
+        "nl": "Sinds 1998 UNESCO-werelderfgoed. Het gotische stadhuis dateert uit de 15e eeuw; de meeste gildehuizen werden in enkele jaren herbouwd na het Franse bombardement van 1695.",
+        "fr": "Patrimoine mondial de l'UNESCO depuis 1998. L'hôtel de ville gothique date du XVe siècle ; la plupart des maisons des corporations ont été reconstruites en quelques années après le bombardement français de 1695.",
+        "de": "Seit 1998 UNESCO-Welterbe. Das gotische Rathaus stammt aus dem 15. Jahrhundert; die meisten Zunfthäuser wurden nach der französischen Bombardierung von 1695 in wenigen Jahren wieder aufgebaut."
+      }
     },
     {
-      "title": "Manneken Pis",
+      "title": {
+        "en": "Manneken Pis",
+        "nl": "Manneken Pis",
+        "fr": "Manneken-Pis",
+        "de": "Manneken Pis"
+      },
       "lat": 50.845,
       "lon": 4.35,
-      "text": "The famous little bronze, made by Jérôme Duquesnoy the Elder in 1619. The one here is a copy; the original is in the Brussels City Museum on the Grand-Place. He owns over a thousand costumes."
+      "text": {
+        "en": "The famous little bronze, made by Jérôme Duquesnoy the Elder in 1619. The one here is a copy; the original is in the Brussels City Museum on the Grand-Place. He owns over a thousand costumes.",
+        "nl": "Het beroemde bronzen ventje, in 1619 gemaakt door Hieronymus Duquesnoy de Oude. Dit is een kopie; het origineel staat in het Brussels Stadsmuseum op de Grote Markt. Hij heeft meer dan duizend kostuums.",
+        "fr": "Le célèbre petit bronze, réalisé par Jérôme Duquesnoy l'Ancien en 1619. Celui-ci est une copie ; l'original est au Musée de la Ville de Bruxelles sur la Grand-Place. Il possède plus de mille costumes.",
+        "de": "Die berühmte kleine Bronzefigur, 1619 von Jérôme Duquesnoy dem Älteren geschaffen. Hier steht eine Kopie; das Original ist im Stadtmuseum am Grand-Place. Er besitzt über tausend Kostüme."
+      }
     },
     {
       "title": "In 't Goudblommeke in Papier",
       "lat": 50.8428,
       "lon": 4.3496,
-      "text": "Historic café once frequented by René Magritte and the surrealists. The Stam & Pilou mural is inside."
+      "text": {
+        "en": "Historic café once frequented by René Magritte and the surrealists. The Stam & Pilou mural is inside.",
+        "nl": "Historisch café waar René Magritte en de surrealisten kwamen. De Stam & Pilou-muurschildering hangt binnen.",
+        "fr": "Café historique autrefois fréquenté par René Magritte et les surréalistes. La fresque Stam & Pilou se trouve à l'intérieur.",
+        "de": "Historisches Café, in dem einst René Magritte und die Surrealisten verkehrten. Das Wandbild Stam & Pilou befindet sich drinnen."
+      }
     },
     {
-      "title": "Notre-Dame du Bon Secours",
+      "title": {
+        "en": "Notre-Dame du Bon Secours",
+        "nl": "Onze-Lieve-Vrouw van Goede Bijstand",
+        "fr": "Notre-Dame du Bon Secours",
+        "de": "Notre-Dame du Bon Secours"
+      },
       "lat": 50.846,
       "lon": 4.3487,
-      "text": "A small Baroque church (late 17th century) with an unusual hexagonal choir under a dome."
+      "text": {
+        "en": "A small Baroque church (late 17th century) with an unusual hexagonal choir under a dome.",
+        "nl": "Een kleine barokkerk (eind 17e eeuw) met een opvallend zeshoekig koor onder een koepel.",
+        "fr": "Une petite église baroque (fin du XVIIe siècle) avec un chœur hexagonal original sous une coupole.",
+        "de": "Eine kleine Barockkirche (spätes 17. Jahrhundert) mit einem ungewöhnlichen sechseckigen Chor unter einer Kuppel."
+      }
     },
     {
-      "title": "Place Anneessens",
+      "title": {
+        "en": "Place Anneessens",
+        "nl": "Anneessensplein",
+        "fr": "Place Anneessens",
+        "de": "Place Anneessens"
+      },
       "lat": 50.8443,
       "lon": 4.3447,
-      "text": "Named after Frans Anneessens, executed in 1719. His statue stands on the square."
+      "text": {
+        "en": "Named after Frans Anneessens, executed in 1719. His statue stands on the square.",
+        "nl": "Genoemd naar Frans Anneessens, terechtgesteld in 1719. Zijn standbeeld staat op het plein.",
+        "fr": "Nommée d'après Frans Anneessens, exécuté en 1719. Sa statue se dresse sur la place.",
+        "de": "Benannt nach Frans Anneessens, hingerichtet 1719. Seine Statue steht auf dem Platz."
+      }
     },
     {
-      "title": "Bourse / Belgian Beer World",
+      "title": {
+        "en": "Bourse / Belgian Beer World",
+        "nl": "Beurs / Belgian Beer World",
+        "fr": "Bourse / Belgian Beer World",
+        "de": "Börse / Belgian Beer World"
+      },
       "lat": 50.8483,
       "lon": 4.3497,
-      "text": "The neoclassical former stock exchange (1873, Léon Suys), now home to the Belgian Beer World experience and a rooftop bar."
+      "text": {
+        "en": "The neoclassical former stock exchange (1873, Léon Suys), now home to the Belgian Beer World experience and a rooftop bar.",
+        "nl": "De neoclassicistische vroegere beurs (1873, Léon Suys), nu de thuis van de Belgian Beer World-belevenis en een dakbar.",
+        "fr": "L'ancienne Bourse néoclassique (1873, Léon Suys), qui accueille aujourd'hui l'expérience Belgian Beer World et un bar sur le toit.",
+        "de": "Die klassizistische ehemalige Börse (1873, Léon Suys), heute Sitz der Belgian Beer World und einer Dachbar."
+      }
     },
     {
-      "title": "Halles Saint-Géry",
+      "title": {
+        "en": "Halles Saint-Géry",
+        "nl": "Sint-Gorikshallen",
+        "fr": "Halles Saint-Géry",
+        "de": "Halles Saint-Géry"
+      },
       "lat": 50.8479,
       "lon": 4.3472,
-      "text": "Neo-Renaissance covered market of 1881, built where the chapel of Saint Géry stood on an island in the Senne, traditionally the birthplace of Brussels."
+      "text": {
+        "en": "Neo-Renaissance covered market of 1881, built where the chapel of Saint Géry stood on an island in the Senne, traditionally the birthplace of Brussels.",
+        "nl": "Overdekte markt in neorenaissancestijl uit 1881, gebouwd waar de Sint-Gorikskapel stond op een eiland in de Zenne, volgens de traditie de geboorteplaats van Brussel.",
+        "fr": "Marché couvert néo-Renaissance de 1881, construit à l'emplacement de la chapelle Saint-Géry sur une île de la Senne, berceau traditionnel de Bruxelles.",
+        "de": "Überdachte Markthalle im Neorenaissance-Stil von 1881, erbaut an der Stelle der Kapelle Saint-Géry auf einer Insel in der Senne, der Überlieferung nach der Geburtsort Brüssels."
+      }
     }
   ],
   "matchSources": [

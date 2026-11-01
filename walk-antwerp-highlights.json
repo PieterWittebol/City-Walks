@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "highlights",
-  "title": "Highlights of Antwerp",
-  "subtitle": "Most notable heritage in the old town",
-  "description": "The best-known protected monuments and buildings within 1 km of the Grote Markt, selected from Wikidata and the Flemish heritage inventory. Texts come from Wikipedia.",
+  "title": {
+    "en": "Highlights of Antwerp",
+    "nl": "Hoogtepunten van Antwerpen",
+    "fr": "Incontournables d'Anvers",
+    "de": "Highlights von Antwerpen"
+  },
+  "subtitle": {
+    "en": "Most notable heritage in the old town",
+    "nl": "Het bekendste erfgoed in de oude stad",
+    "fr": "Le patrimoine le plus remarquable de la vieille ville",
+    "de": "Das bekannteste Kulturerbe der Altstadt"
+  },
+  "description": {
+    "en": "The best-known protected monuments and buildings within 1 km of the Grote Markt, selected from Wikidata and the Flemish heritage inventory. Texts come from Wikipedia.",
+    "nl": "De bekendste beschermde monumenten en gebouwen binnen 1 km van de Grote Markt, gekozen uit Wikidata en de Vlaamse erfgoedinventaris. De teksten komen van Wikipedia en de inventaris.",
+    "fr": "Les monuments et bâtiments protégés les plus connus à moins d'1 km de la Grand-Place, choisis dans Wikidata et l'inventaire flamand du patrimoine. Les textes viennent de Wikipédia et de l'inventaire.",
+    "de": "Die bekanntesten Denkmäler und Gebäude im Umkreis von 1 km um den Grote Markt, ausgewählt aus Wikidata und dem flämischen Denkmalinventar. Die Texte stammen aus Wikipedia und dem Inventar."
+  },
   "lang": "en",
   "generator": {
     "type": "wikidata",

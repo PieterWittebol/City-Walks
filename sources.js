@@ -65,6 +65,26 @@ async function sitelinks(qids) {
   }
   return out;
 }
+// Full-text search on Wikipedia
+async function wikiSearch(lang, q) {
+  if (!LANGS.includes(lang)) return [];
+  const k = "q:" + lang + ":" + q; if (wikiCache[k]) return wikiCache[k];
+  const r = await fetchJSON(`https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srlimit=6&srnamespace=0&format=json&origin=*`, {}, 12000);
+  return remember(k, (r.query?.search || []).map((x) => str(x.title, 200)));
+}
+// Wikipedia article about a comic series/character, in that language only (null if there's no clear match)
+const COMIC_WORD = { en: "comics", nl: "strip", fr: "bande dessinée", de: "Comic" };
+const COMIC_RE = /bande dessin|\bBD\b|strip|comic|beeldverha|tekenaar|dessinateur|cartoonist|Zeichner/i;
+async function comicSeries(name, lang) {
+  const core = norm(String(name || "").split(/[,(\/–-]/)[0]).replace(/^(le|la|les|l'|de|het|the|der|die|das)\s+/, "").trim();
+  if (core.length < 3) return null;
+  const titles = await wikiSearch(lang, `${name} ${COMIC_WORD[lang] || ""}`);
+  for (const t of titles.filter((t) => norm(t).includes(core)).slice(0, 2)) {
+    const sum = await wikiSummary(lang, t);
+    if (sum && sum.text && COMIC_RE.test(sum.text)) return sum;
+  }
+  return null;
+}
 const langOrder = (pref) => [pref, ...LANGS.filter((l) => l !== pref)];
 
 // Resolve a stop to a Wikipedia article in the preferred language. Stop may have:
@@ -180,7 +200,7 @@ async function genWikidata(g, pref, log) {
   dbg("wikidata generator:", rows.length, "rows ->", stops.length, "stops");
   return stops;
 }
-async function genOverpassArt(g, log) {
+async function genOverpassArt(g, log, lang = "en") {
   const [lat, lon] = g.center, r = Math.round(Math.min(3000, Math.max(200, (+g.radiusKm || 1) * 1000)));
   const types = (g.artworkTypes || ["mural", "graffiti"]).filter((t) => /^[a-z_]+$/.test(t)).join("|");
   log("Asking OpenStreetMap for artworks…");
@@ -191,7 +211,7 @@ async function genOverpassArt(g, log) {
     return {
       id: el.id.replace("/", "-"), title: title || (t.artwork_type === "graffiti" ? "Graffiti" : "Mural"),
       artist: str(t.artist_name, 120), year: str(t.start_date, 20), lat: el.lat, lon: el.lon,
-      text: str(t.description || t["description:en"] || t.inscription || (t.artist_name ? `${t.artwork_type === "graffiti" ? "Graffiti" : "A mural"} by ${t.artist_name}.` : ""), 1500), img: commonsFromTags(t),
+      text: str(t["description:" + lang] || t.description || t.inscription, 1500), kind: "osm-art", artistQid: /^Q\d+$/.test(t["artist:wikidata"] || "") ? t["artist:wikidata"] : undefined, img: commonsFromTags(t),
       wikidata: /^Q\d+$/.test(t.wikidata || "") ? t.wikidata : null, links: [osmLink(el.id)].filter(Boolean), named: !!title,
     };
   });
@@ -206,7 +226,7 @@ async function genOds(g, log) {
   const host = str(g.host, 100);
   const stops = recs.filter((x) => dist(c, x) <= r).map((x, i) => ({
     id: "ods" + i + "-" + norm(x.title).replace(/[^a-z0-9]+/g, "-").slice(0, 30), title: x.title || "Mural", artist: x.artist, year: x.year, address: x.address,
-    lat: x.lat, lon: x.lon, text: x.text, img: x.img,
+    lat: x.lat, lon: x.lon, text: x.text, img: x.img, kind: "ods-mural",
     links: [{ label: g.sourceLabel || "Open data", url: `https://${host}/explore/dataset/${encodeURIComponent(g.dataset)}/` }],
   }));
   dbg("ods generator:", recs.length, "records ->", stops.length, "within radius");
@@ -279,5 +299,5 @@ async function selfTest(log) {
 }
 
 window.Sources = { overpass, commonsFromTags, osmLink, wikiSummary, geosearch, sitelinks, resolveWiki, sparql, heritageLinks, odsRecords,
-  genWikidata, genOverpassArt, genOds, orderStops, walkingRoute, geocode, selfTest, LANGS, ODS_HOSTS };
+  genWikidata, genOverpassArt, genOds, wikiSearch, comicSeries, orderStops, walkingRoute, geocode, selfTest, LANGS, ODS_HOSTS };
 })();

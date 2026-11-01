@@ -6,6 +6,21 @@ sights you pass on the way. Everything is built from **open data**.
 
 Live: `https://<your-username>.github.io/<this-repo>/`. Add it to your home screen for an app-like experience.
 
+## Languages
+
+Everything a walker reads can be written per language (English, Dutch, French, German): city names, walk
+titles, subtitles and descriptions, stop titles and stop texts, and hand-written sights. In the files a field is
+either a plain string (in the walk's `lang`) or an object such as `{"en": "Belfry", "nl": "Belfort"}`. In the editor
+every such field has a **Translations** section.
+
+What a walker sees, in order of preference: your own text in their language → Wikipedia in their language
+(for titles: the article title) → your own text in another language → Wikipedia in another language. A note
+shows when a text isn't available in the chosen language.
+
+For heritage in Flanders the build also adds the description from the **Flemish heritage inventory** (Dutch):
+as an extra paragraph in Dutch, or as the text when nothing else exists. To switch this off, set the environment
+variable `OE_TEXTS: off` for the "Build walk data" step in `.github/workflows/build.yml`.
+
 ## Walking a route
 
 - **Turn-by-turn:** the build stores the walking route between each pair of stops, with every turn (OSRM). The
@@ -57,7 +72,7 @@ secrets and only GitHub's own actions, pinned to exact versions.
 | [Wikipedia](https://www.wikipedia.org/) (REST + geosearch) | Texts, photos and precise coordinates, in English, Dutch, French or German | CC BY-SA |
 | [Wikimedia Commons](https://commons.wikimedia.org/) | Photos | various free licences |
 | [City of Brussels open data](https://opendata.brussels.be/) (dataset `bruxelles_parcours_bd`) | Official positions of the comic strip murals; "every mural" walk | see portal |
-| [Flemish heritage inventory](https://inventaris.onroerenderfgoed.be/) (via Wikidata) | Links to the official heritage record | see portal |
+| [Flemish heritage inventory](https://inventaris.onroerenderfgoed.be/) (Agentschap Onroerend Erfgoed) | Dutch descriptions and links for heritage in Flanders, found via Wikidata (P1764) or the agency's geo search service | free to reuse with attribution; reuse conditions being confirmed with info@onroerenderfgoed.be |
 | [OSRM](https://routing.openstreetmap.de/) (FOSSGIS) | Walking routes | ODbL data |
 | [Nominatim](https://nominatim.openstreetmap.org/) | Address lookup as a last resort | ODbL data |
 

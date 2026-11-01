@@ -159,7 +159,7 @@ function show(v) {
   view = v;
   $("btnBack").classList.toggle("hidden", v !== "vWalk");
   $("btnSignOut").classList.toggle("hidden", v === "vLogin");
-  $("barTitle").textContent = v === "vWalk" && cur ? (cur.model.title || "Walk") : "City Walks · Editor";
+  $("barTitle").textContent = v === "vWalk" && cur ? (disp(cur.model.title, cur.model.lang) || "Walk") : "City Walks · Editor";
   if (v === "vHome") renderHome();
   if (v === "vWalk") setTimeout(() => map && map.invalidateSize(), 50);
   updateDirty(); scrollTo(0, 0);
@@ -184,41 +184,67 @@ async function loadCities() {
 }
 const cityDirty = () => { citiesDirty = true; updateDirty(); renderHome(); };
 const move = (arr, i, d) => { const j = i + d; if (j < 0 || j >= arr.length) return false; [arr[i], arr[j]] = [arr[j], arr[i]]; return true; };
+const LNAME = { en: "English", nl: "Nederlands", fr: "Français", de: "Deutsch" };
+// Multilingual values are a plain string (main language) or { en, nl, fr, de }.
+const disp = (v, lang = "en") => v && typeof v === "object" ? (v[lang] || v.en || Object.values(v).find(Boolean) || "") : (v || "");
+// Input for a multilingual value: the main language, plus "Translations" for the others.
+function mlField({ label, value, main, multiline = false, max = 120, rows = 4, onInput }) {
+  const vals = value && typeof value === "object" ? value : { [main]: value || "" };
+  const count = el("span", { className: "small" });
+  const mk = (l, isMain) => {
+    const inp = el(multiline ? "textarea" : "input", { maxLength: max, value: vals[l] || "" });
+    if (multiline) inp.rows = isMain ? rows : 3;
+    inp.dataset.lang = l; inp.oninput = () => { const v = get(); onInput && onInput(v); };
+    return inp;
+  };
+  const mainInp = mk(main, true);
+  const det = el("details", { className: "trans" }, el("summary", {}, "Translations ", count),
+    ...Src.LANGS.filter((l) => l !== main).map((l) => el("label", {}, LNAME[l] || l, mk(l, false))));
+  const root = el("div", { className: "mlfield" }, el("label", {}, label + " ", el("span", { className: "small", textContent: "(" + (LNAME[main] || main) + ")" }), mainInp), det);
+  function get() {
+    const t = {}; root.querySelectorAll("[data-lang]").forEach((x) => { const v = x.value.trim(); if (v) t[x.dataset.lang] = v; });
+    const k = Object.keys(t), n = k.filter((l) => l !== main).length; count.textContent = n ? `(${n})` : "";
+    if (!k.length) return ""; if (k.length === 1 && k[0] === main) return t[main]; return t;
+  }
+  get(); root.get = get;
+  return root;
+}
 const KIND_NAMES = { comics: "Comic strips", "street-art": "Street art", heritage: "Heritage", highlights: "Highlights" };
 function renderHome() {
   const box = $("cities"); box.replaceChildren();
   if (!cities) return;
   cities.cities.forEach((c, ci) => {
-    const head = el("div", { className: "cityHead" }, el("b", { textContent: c.name || c.id }));
+    const head = el("div", { className: "cityHead" }, el("b", { textContent: disp(c.name) || c.id }));
     const up = el("button", { className: "mini", textContent: "↑", title: "Move up" }); up.onclick = () => move(cities.cities, ci, -1) && cityDirty();
     const dn = el("button", { className: "mini", textContent: "↓", title: "Move down" }); dn.onclick = () => move(cities.cities, ci, 1) && cityDirty();
     const ed = el("button", { className: "mini", textContent: "✎", title: "Edit city" }); ed.onclick = () => editCity(c);
     head.append(up, dn, ed);
     const div = el("div", { className: "city" }, head);
     (c.walks || []).forEach((w, wi) => {
-      const t = el("div", { className: "t" }, el("b", { textContent: w.title || w.file }),
+      const t = el("div", { className: "t" }, el("b", { textContent: disp(w.title) || w.file }),
         el("span", { textContent: [KIND_NAMES[w.kind], w.generated ? "generated" : (isFinite(w.stops) ? w.stops + " stops" : ""), w.file].filter(Boolean).join(" · ") }));
       const wu = el("button", { className: "mini", textContent: "↑" }); wu.onclick = () => move(c.walks, wi, -1) && cityDirty();
       const wd = el("button", { className: "mini", textContent: "↓" }); wd.onclick = () => move(c.walks, wi, 1) && cityDirty();
       const op = el("button", { className: "mini primary", textContent: "Edit" }); op.onclick = () => openWalk(c, w);
       div.append(el("div", { className: "walkItem" }, t, wu, wd, op));
     });
-    const add = el("button", { textContent: "＋ Walk in " + (c.name || c.id) }); add.onclick = () => newWalk(c);
+    const add = el("button", { textContent: "＋ Walk in " + (disp(c.name) || c.id) }); add.onclick = () => newWalk(c);
     div.append(el("div", { className: "row" }, add));
     box.append(div);
   });
 }
 async function editCity(c) {
   const isNew = !c;
-  const name = el("input", { value: c?.name || "", maxLength: 60 });
+  const nameF = mlField({ label: "Name", value: c?.name || "", main: "en", max: 60 });
+  const name = { get value() { return disp(nameF.get()); } };
   const lat = el("input", { type: "number", step: "0.0001", value: c?.lat ?? "" }), lon = el("input", { type: "number", step: "0.0001", value: c?.lon ?? "" });
   const find = el("button", { textContent: "Look up centre by name" });
   find.onclick = async () => {
-    try { const r = await fetchJSON("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(name.value), {}, 10000);
+    try { const r = await fetchJSON("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(name.value + ", Belgium"), {}, 10000);
       if (r[0]) { lat.value = round6(+r[0].lat); lon.value = round6(+r[0].lon); } else $("dlgMsg").textContent = "Not found."; }
     catch (e) { $("dlgMsg").textContent = "Lookup failed: " + e.message; }
   };
-  const body = [el("label", {}, "Name", name), el("div", { className: "two" }, el("label", {}, "Centre latitude", lat), el("label", {}, "Centre longitude", lon)), find];
+  const body = [nameF, el("div", { className: "two" }, el("label", {}, "Centre latitude", lat), el("label", {}, "Centre longitude", lon)), find];
   const btns = [{ label: "Cancel", value: null }];
   if (!isNew) btns.unshift({ label: "Delete", value: "delete", cls: "danger", check: () => (c.walks || []).length ? "Delete or move its walks first." : "" });
   btns.push({ label: "OK", value: "ok", cls: "primary", check: () => !name.value.trim() ? "Enter a name." : (!okLat(+lat.value) || !okLon(+lon.value) || lat.value === "") ? "Enter a valid centre (or look it up)." : "" });
@@ -227,8 +253,8 @@ async function editCity(c) {
   if (r !== "ok") return;
   if (isNew) {
     let id = slug(name.value); while (cities.cities.some((x) => x.id === id)) id += "-2";
-    cities.cities.push({ id, name: name.value.trim(), lat: round6(+lat.value), lon: round6(+lon.value), walks: [] });
-  } else Object.assign(c, { name: name.value.trim(), lat: round6(+lat.value), lon: round6(+lon.value) });
+    cities.cities.push({ id, name: nameF.get(), lat: round6(+lat.value), lon: round6(+lon.value), walks: [] });
+  } else Object.assign(c, { name: nameF.get(), lat: round6(+lat.value), lon: round6(+lon.value) });
   cityDirty();
 }
 $("btnAddCity").onclick = () => editCity(null);
@@ -264,7 +290,7 @@ async function newWalk(city) {
   if (!(await leaveOk())) return;
   const title = el("input", { maxLength: 120, placeholder: "e.g. Art Nouveau in Ixelles" });
   const type = el("select", {}, ...[["", "Hand-picked stops"], ["wikidata", "Generated: highlights from Wikidata"], ["osm-art", "Generated: street art from OpenStreetMap"], ["ods", "Generated: city open data portal"]].map(([v, t]) => el("option", { value: v, textContent: t })));
-  const ok = await dialog("New walk in " + city.name, [el("label", {}, "Title", title), el("label", {}, "Type", type)],
+  const ok = await dialog("New walk in " + disp(city.name), [el("label", {}, "Title", title), el("label", {}, "Type", type)],
     [{ label: "Cancel", value: false }, { label: "Create", value: true, cls: "primary", check: () => title.value.trim() ? "" : "Enter a title." }]);
   if (!ok) return;
   const all = cities.cities.flatMap((c) => c.walks || []);
@@ -304,7 +330,7 @@ function drawMap(fit) {
   m.stops.forEach((s, i) => {
     if (!okLat(s.lat) || !okLon(s.lon)) return;
     const icon = L.divIcon({ className: "", html: `<div class="pin${i === selected ? " sel" : ""}${s.fixed ? " fixed" : ""}"><span>${i + 1}</span></div>`, iconSize: [26, 26], iconAnchor: [13, 26] });
-    const mk = L.marker([s.lat, s.lon], { icon, draggable: true, title: str(s.title, 120) }).addTo(pinLayer);
+    const mk = L.marker([s.lat, s.lon], { icon, draggable: true, title: str(disp(s.title, cur.model.lang), 120) }).addTo(pinLayer);
     mk.on("click", () => { selected = i; renderStops(); drawMap(false); });
     mk.on("dragend", () => { const p = mk.getLatLng(); s.lat = round6(p.lat); s.lon = round6(p.lng); s.fixed = true; selected = i; markDirty(); renderStops(); drawMap(false); });
   });
@@ -340,8 +366,8 @@ function renderStops() {
   const m = cur.model;
   if (m.generator) ol.append(el("li", {}, el("div", { className: "t" }, el("b", { textContent: "This is a generated walk" }), el("span", { textContent: "Stops are picked automatically from open data. Change it under 'Generator'." }))));
   m.stops.forEach((s, i) => {
-    const sub = [s.fixed ? "exact position" : "", (s.wiki || []).length ? "Wikipedia: " + s.wiki.join(", ") : "", s.text ? "own text" : ""].filter(Boolean).join(" · ");
-    const t = el("div", { className: "t" }, el("b", { textContent: s.title || "(no title)" }), el("span", { textContent: sub }));
+    const sub = [s.fixed ? "exact position" : "", (s.wiki || []).length ? "Wikipedia: " + s.wiki.join(", ") : "", s.text ? (typeof s.text === "object" ? "own text (" + Object.keys(s.text).join("/") + ")" : "own text") : ""].filter(Boolean).join(" · ");
+    const t = el("div", { className: "t" }, el("b", { textContent: disp(s.title, cur.model.lang) || "(no title)" }), el("span", { textContent: sub }));
     t.onclick = () => { selected = i; renderStops(); drawMap(false); if (okLat(s.lat)) map.panTo([s.lat, s.lon]); };
     const up = el("button", { className: "mini", textContent: "↑" }); up.onclick = () => { if (move(m.stops, i, -1)) { selected = i - 1; markDirty(); renderStops(); drawMap(false); } };
     const dn = el("button", { className: "mini", textContent: "↓" }); dn.onclick = () => { if (move(m.stops, i, 1)) { selected = i + 1; markDirty(); renderStops(); drawMap(false); } };
@@ -350,43 +376,47 @@ function renderStops() {
     ol.append(li);
   });
   $("lnkView").href = "./#" + encodeURIComponent(cur.city.id) + "--" + encodeURIComponent(cur.entry.id);
-  $("barTitle").textContent = cur.model.title || "Walk";
+  $("barTitle").textContent = disp(cur.model.title, cur.model.lang) || "Walk";
 }
 function uniqueStopId(base) { let id = slug(base), n = 2; const ids = new Set(cur.model.stops.map((s) => s.id)); while (ids.has(id)) id = slug(base) + "-" + n++; return id; }
 function addStop(s, edit) {
-  s.id = uniqueStopId(s.title || "stop");
+  s.id = uniqueStopId(disp(s.title) || "stop");
   cur.model.stops.push(s); selected = cur.model.stops.length - 1;
   markDirty(); renderStops(); drawMap(false);
-  if (edit) editStop(selected); else toast("Added: " + s.title);
+  if (edit) editStop(selected); else toast("Added: " + disp(s.title));
 }
 
 // stop form
-let editing = -1;
+let editing = -1, stopTitleF = null, stopTextF = null;
 function editStop(i) {
   editing = i; const s = cur.model.stops[i];
   $("sfHead").textContent = "Stop " + (i + 1);
-  $("sTitle").value = s.title || ""; $("sLat").value = s.lat ?? ""; $("sLon").value = s.lon ?? ""; $("sFixed").checked = !!s.fixed;
-  $("sWiki").value = (s.wiki || []).join(", "); $("sText").value = s.text || ""; $("sArtist").value = s.artist || ""; $("sYear").value = s.year || "";
+  const main = cur.model.lang || "en";
+  stopTitleF = mlField({ label: "Title", value: s.title || "", main, max: 120 }); $("sTitleBox").replaceChildren(stopTitleF);
+  stopTextF = mlField({ label: "Text", value: s.text || "", main, multiline: true, max: 3000, rows: 6 }); $("sTextBox").replaceChildren(stopTextF);
+  $("sLat").value = s.lat ?? ""; $("sLon").value = s.lon ?? ""; $("sFixed").checked = !!s.fixed;
+  $("sWiki").value = (s.wiki || []).join(", "); $("sArtist").value = s.artist || ""; $("sYear").value = s.year || "";
   $("sAddress").value = s.address || ""; $("sMatch").value = (s.match || []).join(", "); $("sType").value = s.artworkType || ""; $("sId").value = s.id || ""; $("sImage").value = s.image || "";
   $("sfMsg").textContent = ""; $("stopForm").classList.remove("hidden");
 }
 $("sfCancel").onclick = () => $("stopForm").classList.add("hidden");
 $("sfDelete").onclick = async () => {
-  if (!(await confirmDlg("Delete stop", "Delete '" + (cur.model.stops[editing].title || "this stop") + "'?", "Delete", "danger"))) return;
+  if (!(await confirmDlg("Delete stop", "Delete '" + (disp(cur.model.stops[editing].title) || "this stop") + "'?", "Delete", "danger"))) return;
   cur.model.stops.splice(editing, 1); selected = -1; $("stopForm").classList.add("hidden"); markDirty(); renderStops(); drawMap(false);
 };
 $("sfOk").onclick = () => {
   const s = cur.model.stops[editing], lat = parseFloat($("sLat").value), lon = parseFloat($("sLon").value);
   const id = $("sId").value.trim();
-  if (!$("sTitle").value.trim()) return ($("sfMsg").textContent = "Enter a title.");
+  const titleV = stopTitleF.get();
+  if (!titleV) return ($("sfMsg").textContent = "Enter a title.");
   if (!okLat(lat) || !okLon(lon)) return ($("sfMsg").textContent = "Enter a valid position (or drag the pin on the map).");
   if (!/^[a-z0-9_-]{1,60}$/i.test(id)) return ($("sfMsg").textContent = "Id: letters, digits, - or _ only.");
   if (cur.model.stops.some((x, j) => j !== editing && x.id === id)) return ($("sfMsg").textContent = "Another stop already uses this id.");
   const img = $("sImage").value.trim();
   if (img && !U.safeImg(img)) return ($("sfMsg").textContent = "Image must be a file in the repository (e.g. photo.jpg) or an upload.wikimedia.org link.");
   const set = (k, v) => { if (v === "" || v === false || (Array.isArray(v) && !v.length)) delete s[k]; else s[k] = v; };
-  s.title = $("sTitle").value.trim(); s.lat = round6(lat); s.lon = round6(lon); s.id = id;
-  set("fixed", $("sFixed").checked); set("wiki", list($("sWiki").value).map((w) => w.toLowerCase())); set("text", $("sText").value.trim());
+  s.title = titleV; s.lat = round6(lat); s.lon = round6(lon); s.id = id;
+  set("fixed", $("sFixed").checked); set("wiki", list($("sWiki").value).map((w) => w.toLowerCase())); { const tv = stopTextF.get(); if (tv) s.text = tv; else delete s.text; }
   set("artist", $("sArtist").value.trim()); set("year", $("sYear").value.trim()); set("address", $("sAddress").value.trim());
   set("match", list($("sMatch").value).map((w) => w.toLowerCase())); set("artworkType", $("sType").value); set("image", img);
   $("stopForm").classList.add("hidden"); markDirty(); renderStops(); drawMap(false);
@@ -435,14 +465,15 @@ $("btnAddSearch").onclick = async () => {
 // details tab
 function fillDetails() {
   const m = cur.model;
-  $("wTitle").value = m.title || ""; $("wSubtitle").value = m.subtitle || ""; $("wDesc").value = m.description || "";
+  const main = Src.LANGS.includes(m.lang) ? m.lang : "en";
+  $("wTitleBox").replaceChildren(mlField({ label: "Title", value: m.title, main, onInput: (v) => { m.title = v; markDirty(); $("barTitle").textContent = disp(v, main) || "Walk"; } }));
+  $("wSubtitleBox").replaceChildren(mlField({ label: "Subtitle", value: m.subtitle, main, onInput: (v) => { m.subtitle = v; markDirty(); } }));
+  $("wDescBox").replaceChildren(mlField({ label: "Description", value: m.description, main, multiline: true, max: 1000, onInput: (v) => { m.description = v; markDirty(); } }));
   $("wKind").value = cur.entry.kind || ""; $("wLang").value = Src.LANGS.includes(m.lang) ? m.lang : "en"; $("wFile").textContent = cur.path;
 }
-$("wTitle").oninput = () => { cur.model.title = $("wTitle").value; markDirty(); $("barTitle").textContent = cur.model.title || "Walk"; };
-$("wSubtitle").oninput = () => { cur.model.subtitle = $("wSubtitle").value; markDirty(); };
-$("wDesc").oninput = () => { cur.model.description = $("wDesc").value; markDirty(); };
+
 $("wKind").onchange = () => { cur.entry.kind = $("wKind").value || undefined; markDirty(); };
-$("wLang").onchange = () => { cur.model.lang = $("wLang").value; markDirty(); };
+$("wLang").onchange = () => { cur.model.lang = $("wLang").value; markDirty(); fillDetails(); };
 
 // generator tab
 $("gHost").replaceChildren(...Src.ODS_HOSTS.map((h) => el("option", { value: h, textContent: h })));
@@ -489,8 +520,9 @@ $("btnSaveWalk").onclick = async () => {
   const errs = SC.checkWalk(out);
   if (errs.length) return dialog("Please fix first", el("p", { className: "msg", textContent: errs.join("\n") }), [{ label: "OK", value: 1 }]);
   const e = cur.entry;
-  const entryChanged = cur.isNew || e.title !== out.title || (e.subtitle || "") !== (out.subtitle || "") || (!out.generator && e.stops !== out.stops.length) || !!e.generated !== !!out.generator || cur.kindTouched;
-  const msg = el("input", { value: (cur.isNew ? "Add walk " : "Update walk ") + out.title, maxLength: 200 });
+  const same = (a, b) => JSON.stringify(a || "") === JSON.stringify(b || "");
+  const entryChanged = cur.isNew || !same(e.title, out.title) || !same(e.subtitle, out.subtitle) || (!out.generator && e.stops !== out.stops.length) || !!e.generated !== !!out.generator || cur.kindTouched;
+  const msg = el("input", { value: (cur.isNew ? "Add walk " : "Update walk ") + disp(out.title, out.lang), maxLength: 200 });
   const ok = await dialog("Save walk", [el("label", {}, "Change description", msg), el("p", { className: "small", textContent: `Saves ${cur.path}${entryChanged || citiesDirty ? " and cities.json" : ""} to ${auth.repo}. The app shows the change a few minutes later, once GitHub has rebuilt the walk data.` })],
     [{ label: "Cancel", value: false }, { label: "Save", value: true, cls: "primary" }]);
   if (!ok) return;
@@ -511,11 +543,11 @@ $("btnSaveWalk").onclick = async () => {
 $("wKind").addEventListener("change", () => { if (cur) cur.kindTouched = true; });
 $("btnDeleteWalk").onclick = async () => {
   if (cur.isNew) { cur = null; show("vHome"); return; }
-  if (!(await confirmDlg("Delete walk", `Delete '${cur.model.title}' (${cur.path}) from the repository? It's still in GitHub's history if you need it back.`, "Delete", "danger"))) return;
+  if (!(await confirmDlg("Delete walk", `Delete '${disp(cur.model.title)}' (${cur.path}) from the repository? It's still in GitHub's history if you need it back.`, "Delete", "danger"))) return;
   try {
     const ws = cur.city.walks; ws.splice(ws.indexOf(cur.entry), 1);
-    await saveCities("Remove walk " + cur.model.title);   // first unlist it, so the app never points at a missing file
-    await deleteFile(cur.path, cur.sha, "Delete walk " + cur.model.title);
+    await saveCities("Remove walk " + disp(cur.model.title));   // first unlist it, so the app never points at a missing file
+    await deleteFile(cur.path, cur.sha, "Delete walk " + disp(cur.model.title));
     cur = null; toast("Deleted."); show("vHome");
   } catch (e) { await dialog("Not deleted", e.message, [{ label: "OK", value: 1 }]); await loadCities(); }
 };

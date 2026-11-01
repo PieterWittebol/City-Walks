@@ -68,7 +68,7 @@ function drawLine() { routeLayer.setLatLngs((S.line || []).map((p) => [p.lat, p.
 function fitWalk() { if (S.stops.length) map.fitBounds(L.latLngBounds(S.stops.map((s) => [s.lat, s.lon])), { padding: [30, 30], maxZoom: 17 }); }
 
 // ---------- load a walk: local cache → ready-made data from the GitHub build → build on the phone ----------
-const CACHE_VER = 6;
+const CACHE_VER = 8;
 const BUILT_FILE = /^[a-z0-9-]+\.[a-z]{2}\.json$/;
 let builtIndex = null, builtIndexAt = 0;
 async function getBuiltIndex(fresh) {
@@ -92,9 +92,17 @@ async function loadPrebuilt(lang, fresh) {
     return b;
   } catch (e) { dbg("prebuilt failed", file, String(e)); return null; }
 }
+// hand-written sights from the walk file, in the chosen language when available
+function curatedSights() {
+  const lang = contentLang();
+  return S.walk.sights.map((s) => {
+    const p = s.texts ? Schema.pickText(s.texts, lang, S.walk.lang) : null, t = s.titles ? Schema.pickText(s.titles, lang, S.walk.lang) : null;
+    return { ...s, text: p ? p.text : s.text, title: t ? t.text : s.title };
+  });
+}
 function useBuilt(b) {
   S.stops = b.stops; S.line = b.line; S.km = b.km; S.legs = Schema.cleanLegs(b.legs, b.stops.length); S.nav = null;
-  S.sights = S.walk.sights.map((s) => ({ ...s })).concat(b.live || []);
+  S.sights = curatedSights().concat(b.live || []);
 }
 async function build(force = false, log = () => {}) {
   const lang = contentLang(), ck = S.key + ":build";
@@ -125,6 +133,7 @@ function render(expand) {
   $("dMeta").textContent = (arrived && S.focus === S.target ? "You're here · " : S.focus === S.target ? "Up next · " : "") + `${S.focus + 1}. ${f.title}` + (f.artist ? ` · ${f.artist}` : "") + (f.year ? ` · ${f.year}` : "") + (f.address ? ` · ${f.address}` : "");
   $("dText").textContent = f.text || "No description available yet.";
   const links = $("dLinks"); links.replaceChildren();
+  if (f.textLang && f.textLang !== contentLang() && f.text) links.append(el("span", { className: "langnote", textContent: `Not available in ${LANG_NAMES[contentLang()]}; shown in ${LANG_NAMES[f.textLang] || f.textLang}` }));
   if (f.credit) links.append(el("span", { textContent: f.credit }));
   for (const l of f.links || []) { const u = safeUrl(l.url); if (u) links.append(el("a", { href: u, target: "_blank", rel: "noopener noreferrer", textContent: l.label + " ›" })); }
   $("btnSeen").textContent = S.visited.has(f.id) ? "↺ Unsee" : "✓ Seen";
@@ -417,13 +426,24 @@ function startDemo() {
 
 // ---------- start screen: cities and walks ----------
 const KIND = { comics: "Comic strips", "street-art": "Street art", heritage: "Heritage", highlights: "Highlights" };
+// text in the chosen language from a multilingual value (string or { en, nl, … })
+function tl(v, fallbackLang) {
+  if (v && typeof v === "object") { const p = Schema.pickText(v, contentLang(), fallbackLang || "en"); return p ? p.text : ""; }
+  return v || "";
+}
+function showWalkTexts() {
+  if (!S.walk) return;
+  const i = S.walk.i18n || {};
+  $("brand").textContent = (i.title ? tl(i.title, S.walk.lang) : S.walk.title) || "City Walk";
+  $("walkDesc").textContent = i.description ? tl(i.description, S.walk.lang) : S.walk.description;
+}
 async function loadCatalog() {
   let c = null;
   try { c = await fetchJSON("cities.json", { cache: "no-cache" }, 15000); } catch (e) { dbg("cities.json failed", String(e)); }
   const cities = (c && Array.isArray(c.cities) ? c.cities : []).map((x) => ({
-    id: cleanId(x.id, "city"), name: str(x.name, 60), lat: x.lat, lon: x.lon,
+    id: cleanId(x.id, "city"), name: Schema.cleanTexts(x.name, 60) || str(x.name, 60), lat: x.lat, lon: x.lon,
     walks: (Array.isArray(x.walks) ? x.walks : []).filter((w) => w && validFile(w.file)).map((w) => ({
-      id: cleanId(w.id, "walk"), file: w.file, title: str(w.title, 120), subtitle: str(w.subtitle, 160), kind: KIND[w.kind] ? w.kind : null,
+      id: cleanId(w.id, "walk"), file: w.file, title: Schema.cleanTexts(w.title, 120) || str(w.title, 120), subtitle: Schema.cleanTexts(w.subtitle, 160) || str(w.subtitle, 160), kind: KIND[w.kind] ? w.kind : null,
       distanceKm: num(w.distanceKm), stops: num(w.stops), generated: !!w.generated,
     })),
   })).filter((x) => x.walks.length);
@@ -431,7 +451,7 @@ async function loadCatalog() {
   if (c?.title) { $("siteTitle").textContent = str(c.title, 80); document.title = str(c.title, 80); }
   if (!cities.length) { $("walkList").replaceChildren(el("p", { textContent: "Couldn't load the list of walks. Check your connection and reload." })); return; }
   const chips = $("cityList"); chips.replaceChildren();
-  for (const city of cities) { const b = el("button", { className: "chip", textContent: city.name }); b.dataset.id = city.id; b.onclick = () => selectCity(city); chips.append(b); }
+  for (const city of cities) { const b = el("button", { className: "chip", textContent: tl(city.name) }); b.dataset.id = city.id; b.onclick = () => selectCity(city); chips.append(b); }
   const [hc, hw] = location.hash.slice(1).split("--");
   const city = cities.find((x) => x.id === hc) || cities.find((x) => x.id === LS.get("bd:lastCity", "")) || cities[0];
   selectCity(city, hw || LS.get("bd:lastWalk:" + city.id, ""));
@@ -442,7 +462,7 @@ function selectCity(city, walkId) {
   const list = $("walkList"); list.replaceChildren();
   for (const w of city.walks) {
     const info = [w.kind && KIND[w.kind], isFinite(w.stops) ? `${w.stops} stops` : w.generated ? "built live from open data" : "", isFinite(w.distanceKm) ? `~${w.distanceKm} km` : ""].filter(Boolean).join(" · ");
-    const b = el("button", { className: "walk" }, el("b", { textContent: w.title }), el("span", { textContent: [w.subtitle, info].filter(Boolean).join(" · ") }));
+    const b = el("button", { className: "walk" }, el("b", { textContent: tl(w.title) }), el("span", { textContent: [tl(w.subtitle), info].filter(Boolean).join(" · ") }));
     b.dataset.id = w.id; b.onclick = () => selectWalk(w); list.append(b);
   }
   if (okLat(city.lat) && okLon(city.lon)) map.setView([city.lat, city.lon], 14);
@@ -460,8 +480,7 @@ async function selectWalk(w) {
     S.walk = walk; S.rawHash = hash(JSON.stringify(raw)); S.key = "bd:" + S.city.id + ":" + walk.id;
     S.stops = walk.stops.map((s) => ({ ...s })); S.sights = walk.sights.map((s) => ({ ...s })); S.line = null;
     S.visited = new Set(LS.get(S.key + ":visited", [])); S.announced = new Set(); S.target = S.focus = 0;
-    $("brand").textContent = walk.title || "City Walk";
-    $("walkDesc").textContent = walk.description;
+    showWalkTexts();
     $("btnStart").disabled = $("btnDemo").disabled = false;
     LS.set("bd:lastWalk:" + S.city.id, w.id);
     history.replaceState(null, "", "#" + S.city.id + "--" + w.id);
@@ -491,6 +510,11 @@ async function begin(demo) {
 // ---------- wiring ----------
 function fillLang(sel) { sel.replaceChildren(...Object.entries(LANG_NAMES).map(([v, t]) => el("option", { value: v, textContent: v === "auto" ? `${t} (${LANG_NAMES[contentLang()] || "English"})` : t }))); sel.value = S.opts.lang; }
 fillLang($("optLang"));
+$("optLang").onchange = () => {
+  S.opts.lang = $("optLang").value; saveOpts();
+  document.querySelectorAll("#cityList .chip").forEach((b) => { const c = S.catalog.find((x) => x.id === b.dataset.id); if (c) b.textContent = tl(c.name); });
+  if (S.city) selectCity(S.city, S.entry && S.entry.id);
+};
 $("btnStart").onclick = () => begin(false);
 $("btnDemo").onclick = () => begin(true);
 $("optVoice").checked = S.opts.voice;
@@ -530,6 +554,7 @@ $("btnClose").onclick = async () => {
   S.opts.voice = $("optVoice2").checked; S.opts.sights = $("optSights").checked; S.opts.speakNav = $("optSpeakNav").checked; S.opts.sound = $("optSound").checked;
   const langChanged = $("optLang2").value !== S.opts.lang; S.opts.lang = $("optLang2").value; saveOpts();
   $("menu").classList.add("hidden");
+  if (langChanged) showWalkTexts();
   if (langChanged && S.started) { msg("Loading texts in " + LANG_NAMES[contentLang()] + "…", 4000); await rebuild(false); }
 };
 $("btnOtherWalk").onclick = () => {

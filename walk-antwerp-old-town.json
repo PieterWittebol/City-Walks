@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "old-town",
-  "title": "Old Antwerp",
-  "subtitle": "From Central Station to Het Steen",
-  "description": "From the 'railway cathedral' past the Rubens House, the Baroque Conscience square, the Cathedral of Our Lady and the Plantin-Moretus Museum to the Grote Markt and the river. Texts and photos come from Wikipedia.",
+  "title": {
+    "en": "Old Antwerp",
+    "nl": "Oud Antwerpen",
+    "fr": "Le vieil Anvers",
+    "de": "Altes Antwerpen"
+  },
+  "subtitle": {
+    "en": "From Central Station to Het Steen",
+    "nl": "Van het Centraal Station tot Het Steen",
+    "fr": "De la gare centrale au Steen",
+    "de": "Vom Hauptbahnhof zum Steen"
+  },
+  "description": {
+    "en": "From the 'railway cathedral' past the Rubens House, the Baroque Conscience square, the Cathedral of Our Lady and the Plantin-Moretus Museum to the Grote Markt and the river. Texts and photos come from Wikipedia.",
+    "nl": "Van de 'spoorwegkathedraal' langs het Rubenshuis, het barokke Conscienceplein, de Onze-Lieve-Vrouwekathedraal en het Museum Plantin-Moretus naar de Grote Markt en de Schelde. Teksten en foto's komen van Wikipedia.",
+    "fr": "De la « cathédrale ferroviaire » à la Grand-Place et l'Escaut, en passant par la Maison de Rubens, la place baroque Conscience, la cathédrale Notre-Dame et le musée Plantin-Moretus. Textes et photos viennent de Wikipédia.",
+    "de": "Von der „Eisenbahnkathedrale“ vorbei am Rubenshaus, am barocken Conscienceplein, an der Liebfrauenkathedrale und am Museum Plantin-Moretus zum Grote Markt und zur Schelde. Texte und Fotos stammen aus Wikipedia."
+  },
   "lang": "en",
   "stops": [
     {

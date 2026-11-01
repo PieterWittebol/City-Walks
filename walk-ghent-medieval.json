@@ -1,9 +1,24 @@
 {
   "schema": 2,
   "id": "medieval",
-  "title": "Medieval Ghent",
-  "subtitle": "Cathedral, belfry, castle and the old harbour",
-  "description": "A loop through the historic heart of Ghent: St Bavo's, the Belfry, the Friday Market, the Patershol, the Castle of the Counts and the Graslei and Korenlei quays. Texts and photos come from Wikipedia, in the language you choose.",
+  "title": {
+    "en": "Medieval Ghent",
+    "nl": "Middeleeuws Gent",
+    "fr": "Gand médiévale",
+    "de": "Mittelalterliches Gent"
+  },
+  "subtitle": {
+    "en": "Cathedral, belfry, castle and the old harbour",
+    "nl": "Kathedraal, belfort, burcht en de oude haven",
+    "fr": "Cathédrale, beffroi, château et ancien port",
+    "de": "Kathedrale, Belfried, Burg und alter Hafen"
+  },
+  "description": {
+    "en": "A loop through the historic heart of Ghent: St Bavo's, the Belfry, the Friday Market, the Patershol, the Castle of the Counts and the Graslei and Korenlei quays. Texts and photos come from Wikipedia, in the language you choose.",
+    "nl": "Een lus door het historische hart van Gent: Sint-Baafs, het Belfort, de Vrijdagmarkt, het Patershol, het Gravensteen en de Graslei en Korenlei. Teksten en foto's komen van Wikipedia, in de taal die je kiest.",
+    "fr": "Une boucle au cœur historique de Gand : Saint-Bavon, le beffroi, le Vrijdagmarkt, le Patershol, le château des Comtes et les quais Graslei et Korenlei. Textes et photos viennent de Wikipédia, dans la langue choisie.",
+    "de": "Eine Runde durch das historische Herz von Gent: St. Bavo, der Belfried, der Freitagsmarkt, das Patershol, die Grafenburg und die Kais Graslei und Korenlei. Texte und Fotos stammen aus Wikipedia, in der gewählten Sprache."
+  },
   "lang": "en",
   "stops": [
     {

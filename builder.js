@@ -5,7 +5,15 @@
 "use strict";
 const U = window.Util, Src = window.Sources;
 const { dbg, dist, distToLine, str, norm, sleep } = U;
-const { cleanStop } = window.Schema;
+const { cleanStop, pickText } = window.Schema;
+// Wording for generated descriptions
+const TPL = {
+  en: { ods: (t, a, y) => `Comic strip mural${t ? ` featuring ${t}` : ""}${a ? ` by ${a}` : ""}${y ? ` (${y})` : ""}, part of the City of Brussels' Comic Book Route.`, art: (a) => `Street art${a ? ` by ${a}` : ""}.`, series: "About the series: ", artist: "About the artist: " },
+  nl: { ods: (t, a, y) => `Stripmuur${t ? ` met ${t}` : ""}${a ? ` van ${a}` : ""}${y ? ` (${y})` : ""}, onderdeel van het Brusselse Stripparcours.`, art: (a) => `Street art${a ? ` van ${a}` : ""}.`, series: "Over de reeks: ", artist: "Over de kunstenaar: " },
+  fr: { ods: (t, a, y) => `Fresque BD${t ? ` : ${t}` : ""}${a ? `, par ${a}` : ""}${y ? ` (${y})` : ""}, sur le Parcours BD de la Ville de Bruxelles.`, art: (a) => `Œuvre de street art${a ? ` de ${a}` : ""}.`, series: "La série : ", artist: "L'artiste : " },
+  de: { ods: (t, a, y) => `Comic-Wandbild${t ? ` mit ${t}` : ""}${a ? ` von ${a}` : ""}${y ? ` (${y})` : ""}, Teil der Brüsseler Comic-Route.`, art: (a) => `Street-Art${a ? ` von ${a}` : ""}.`, series: "Zur Serie: ", artist: "Zum Künstler: " },
+};
+const shorten = (t, n = 600) => t.length > n ? t.slice(0, n - 20).replace(/\s+\S*$/, "") + "…" : t;
 const LANG_NAMES = { en: "English", nl: "Nederlands", fr: "Français", de: "Deutsch" };
 async function pool(items, n, fn) { const q = items.slice(); await Promise.all(Array.from({ length: Math.min(n, q.length) }, async () => { while (q.length) await fn(q.shift()); })); }
 function bboxOf(stops, m = 0.004) {
@@ -18,13 +26,24 @@ async function buildWalk(W, lang, log = () => {}) {
   if (W.generator) {
     const g = W.generator;
     try {
-      stops = g.type === "wikidata" ? await Src.genWikidata(g, lang, log) : g.type === "osm-art" ? await Src.genOverpassArt(g, log) : await Src.genOds(g, log);
+      stops = g.type === "wikidata" ? await Src.genWikidata(g, lang, log) : g.type === "osm-art" ? await Src.genOverpassArt(g, log, lang) : await Src.genOds(g, log);
       const ids = new Set(); stops = stops.map((s, i) => cleanStop({ ...s, image: s.img }, i, ids));
       online = true;
     } catch (e) { dbg("generator failed", g.type, String(e)); throw new Error("Couldn't load this walk's data (" + (e.message || e) + "). Check your connection and try again."); }
     if (!stops.length) throw new Error("No places found for this walk.");
     stops = Src.orderStops(stops, W.start || { lat: g.center[0], lon: g.center[1] });
   } else stops = W.stops.map((s) => ({ ...s, links: s.links.slice() }));
+
+  // 0. Own titles and texts: the chosen language if written, otherwise remember the best other language
+  for (const s of stops) {
+    const tp = s.titles ? pickText(s.titles, lang, W.lang) : null;
+    if (tp) { s.title = tp.text; s.titleLang = tp.lang; } else s.titleLang = W.generator ? lang : W.lang;
+    delete s.titles;
+    const own = pickText(s.texts || (s.text ? { [s.textLang || W.lang]: s.text } : null), lang, W.lang);
+    s.text = ""; s.textLang = null; s.ownOther = null;
+    if (own && own.lang === lang) { s.text = own.text; s.textLang = lang; } else if (own) s.ownOther = own;
+    delete s.texts;
+  }
 
   // 1. Wikipedia / Wikidata: text, photo, precise position, links
   const wikiStops = stops.filter((s) => s.wiki.length || s.wikipedia || s.wikidata);
@@ -36,12 +55,34 @@ async function buildWalk(W, lang, log = () => {}) {
     if (!info) { dbg("no wikipedia article for", s.id); return; }
     online = true;
     s.qid = info.qid || s.wikidata;
-    if (!s.text && info.text) { s.text = info.text; s.textLang = info.lang; s.credit = `Text: Wikipedia (${info.lang}), CC BY-SA`; }
+    if (!s.text && info.text && (info.lang === lang || !s.ownOther)) { s.text = info.text; s.textLang = info.lang; s.credit = `Text: Wikipedia (${info.lang}), CC BY-SA`; }
     if (info.url) s.links.unshift({ label: "Wikipedia", url: info.url });
     if (!s.img && info.img) s.img = info.img;
     if (!s.fixed && info.lat != null && !W.generator && dist(s, info) < 800) { s.lat = info.lat; s.lon = info.lon; s.src = "wikipedia"; }
-    if (!s.title) s.title = info.title;
+    // no title written in this language: use the Wikipedia article's title in this language ("Sint-Baafskathedraal")
+    if ((!s.title || s.titleLang !== lang) && info.lang === lang && info.title) { s.title = info.title.replace(/\s*\([^)]*\)\s*$/, ""); s.titleLang = lang; }
   });
+  // own text in another language beats nothing
+  for (const s of stops) { if (!s.text && s.ownOther) { s.text = s.ownOther.text; s.textLang = s.ownOther.lang; } delete s.ownOther; }
+
+  // 1b. Generated walks: describe murals from their data, plus Wikipedia about the comic series or the artist
+  const describe = stops.filter((s) => s.kind && !s.text);
+  if (describe.length) log("Writing descriptions…");
+  const L = TPL[lang] || TPL.en;
+  await pool(describe, 3, async (s) => {
+    if (s.kind === "ods-mural") {
+      s.text = L.ods(s.title, s.artist, s.year); s.textLang = lang;
+      const ser = await Src.comicSeries(s.title, lang).catch(() => null);
+      if (ser && ser.text) { s.text += "\n\n" + L.series + shorten(ser.text); s.credit = `Series text: Wikipedia (${ser.lang}), CC BY-SA`; if (ser.url) s.links.push({ label: "Wikipedia", url: ser.url }); }
+    } else if (s.kind === "osm-art") {
+      s.text = L.art(s.artist); s.textLang = lang;
+      if (s.artistQid) {
+        const a = await Src.resolveWiki({ wikidata: s.artistQid, wiki: [], lat: s.lat, lon: s.lon }, lang).catch(() => null);
+        if (a && a.text && a.lang === lang) { s.text += "\n\n" + L.artist + shorten(a.text, 450); s.credit = `Artist text: Wikipedia (${a.lang}), CC BY-SA`; if (a.url) s.links.push({ label: "Wikipedia", url: a.url }); }
+      }
+    }
+  });
+
   const qids = stops.map((s) => s.qid).filter(Boolean);
   if (qids.length) { const h = await Src.heritageLinks(qids); for (const s of stops) if (h[s.qid]) s.links.push(h[s.qid]); }
 
