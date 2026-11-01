@@ -1,6 +1,10 @@
 // Tests for build.mjs. Run with: node --test
 // No network: every test passes its own fake fetch. Not published (build.mjs only copies site files).
-process.env.WAIT_SCALE = "0.01"; // 20 s Overpass back-off → 200 ms, 1.5 s Overpass spacing → 15 ms
+process.env.WAIT_SCALE = "0.02"; // 20 s Overpass back-off → 400 ms, 1.5 s Overpass spacing → 30 ms
+delete process.env.GITHUB_STEP_SUMMARY; // tests must not write to a real Actions summary
+const realLog = console.log;
+console.log = () => {}; // quiet: run() prints progress and ::warning:: lines
+process.on("exit", () => { console.log = realLog; });
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -25,9 +29,9 @@ test("a 404 is remembered: the same request isn't sent twice", async () => {
   assert.equal(calls, 1);
 });
 
-test("a 503 is not remembered: the same request is tried again later", async () => {
+test("a 503 is not cached: the same request is tried again later", async () => {
   let calls = 0;
-  const f = politeFetch(async () => { calls++; return json({}, 503); }, { failMemoryMs: 0 }); // (failure memory would refuse it at once)
+  const f = politeFetch(async () => { calls++; return json({}, 503); });
   await f("https://www.wikidata.org/w/api.php?x=1");
   const afterFirst = calls;
   await f("https://www.wikidata.org/w/api.php?x=1");
@@ -38,11 +42,11 @@ test("aborting during a back-off stops at once, without another request", async 
   let calls = 0;
   const f = politeFetch(async (url, opts) => { calls++; if (opts.signal?.aborted) throw abortError(); return json({}, 429); });
   const ac = new AbortController();
-  setTimeout(() => ac.abort(), 10); // back-off after a 429 is 5 s × 0.01 = 50 ms
+  setTimeout(() => ac.abort(), 20); // back-off after a 429 from Overpass is 20 s × 0.02 = 400 ms
   const t0 = Date.now();
-  await assert.rejects(f("https://en.wikipedia.org/w/api.php?q=1", { signal: ac.signal }), { name: "AbortError" });
+  await assert.rejects(f("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=1", signal: ac.signal }), { name: "AbortError" });
   assert.equal(calls, 1);
-  assert.ok(Date.now() - t0 < 40, `took ${Date.now() - t0} ms`);
+  assert.ok(Date.now() - t0 < 250, `took ${Date.now() - t0} ms (a full back-off is 400 ms)`);
 });
 
 test("after the deadline no requests are sent", async () => {
@@ -134,6 +138,41 @@ test("other hosts are unaffected", async () => {
   assert.equal(seen.length, 3);
 });
 
+test("only Overpass hosts are skipped: other services are always tried", async () => {
+  let calls = 0;
+  const f = politeFetch(async () => { calls++; throw abortError(); });
+  const url = "https://en.wikipedia.org/w/api.php?q=1";
+  await assert.rejects(f(url), { name: "AbortError" });
+  await assert.rejects(f("https://en.wikipedia.org/w/api.php?q=2"), { name: "AbortError" });
+  await assert.rejects(f("https://en.wikipedia.org/w/api.php?q=3"), { name: "AbortError" });
+  await assert.rejects(f(url), { name: "AbortError" }); // the same failed request is sent again too
+  assert.equal(calls, 4);
+  assert.deepEqual(f.stats.down, []);
+});
+
+test("giving up during a back-off counts as a failure", async () => {
+  let calls = 0;
+  const f = politeFetch(async () => { calls++; return json({}, 503); });
+  for (const n of [1, 2]) {
+    const ac = new AbortController();
+    setTimeout(() => ac.abort(), 20);
+    await assert.rejects(f(OVERPASS, { method: "POST", body: "data=" + n, signal: ac.signal }), { name: "AbortError" });
+  }
+  await assert.rejects(f(OVERPASS, post(3)), /host down/);
+  assert.equal(calls, 2);
+});
+
+test("a freed slot goes to the request that was waiting, not to a newcomer", async () => {
+  const order = [];
+  const f = politeFetch(async (url, opts) => { order.push(opts.body); await new Promise((r) => setTimeout(r, 20)); return json({ elements: [] }); });
+  const a = f("https://overpass-api.de/api/interpreter", post("a"));
+  const b = f("https://overpass-api.de/api/interpreter", post("b"));
+  await a;
+  const c = f("https://overpass-api.de/api/interpreter", post("c")); // arrives just as a's slot is freed
+  await Promise.all([b, c]);
+  assert.deepEqual(order, ["data=a", "data=b", "data=c"]);
+});
+
 // ---- cache kept between runs ----
 
 test("answers saved by one run are reused by the next, until they're too old", async () => {
@@ -155,6 +194,17 @@ test("answers saved by one run are reused by the next, until they're too old", a
   const expired = politeFetch(base, { cacheFile: file, maxAgeMs: 0 });
   await expired(url);
   assert.equal(calls, 2);
+});
+
+test("Overpass answers that carry a runtime-error remark aren't kept for the next run", async () => {
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "cw-cache-")), "http-cache.json");
+  const url = "https://overpass-api.de/api/interpreter";
+  const first = politeFetch(async (u, o) => json(o.body === "data=bad" ? { elements: [], remark: "runtime error: Query timed out" } : { elements: [1] }), { cacheFile: file, maxAgeMs: 60_000 });
+  await first(url, post("bad")); await first(url, post("good"));
+  first.save();
+  const keys = JSON.parse(fs.readFileSync(file, "utf8")).entries.map(([k]) => k);
+  assert.equal(keys.length, 1);
+  assert.ok(keys[0].endsWith("data=good"));
 });
 
 // ---- run(): time budget ----

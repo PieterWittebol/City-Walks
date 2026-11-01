@@ -51,7 +51,8 @@ photos still come from OpenStreetMap and Wikimedia.
 The build has a time limit: after 20 minutes it stops starting new lookups and keeps the previously published
 data for walks that haven't changed (phones look up the rest themselves until the next build). Answers from the
 open data services are kept between runs and reused for up to 8 days after an edit; Monday and manual runs ask
-everything fresh. A service that keeps timing out is skipped for the rest of the run.
+everything fresh. An OpenStreetMap search server (Overpass) that keeps timing out is skipped for 10 minutes, and
+gets another chance before the retry round.
 - **Same code:** the build runs the app's own `util.js`, `sources.js`, `schema.js` and `builder.js` in a
   sandbox. It identifies itself to the services with a User-Agent, spaces out its requests, retries politely
   and caches identical requests.

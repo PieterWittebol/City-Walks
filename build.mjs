@@ -47,14 +47,16 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
   const cache = new Map(), hosts = new Map();
   const gap = (host) => /overpass/.test(host) ? 1500 : /nominatim/.test(host) ? 1100 : /query\.wikidata/.test(host) ? 500 : /onroerenderfgoed|erfgoed\.net/.test(host) ? 300 : 50;
   const slots = (host) => /(^|\.)wikipedia\.org$|^www\.wikidata\.org$/.test(host) ? 4 : 1;
+  const watched = (host) => /^(overpass-api\.de|overpass\.private\.coffee|maps\.mail\.ru|overpass\.kumi\.systems)$/.test(host); // the Overpass endpoints
   const stats = { requests: 0, cached: 0, hosts: {}, down: [] };
-  // A host that fails twice in a row is skipped for downMs, and a failed request isn't repeated for failMemoryMs
-  // (sources.js tries 4 Overpass servers per query, and the same query again for every language).
+  // An Overpass host that fails twice in a row is skipped for downMs, and a failed request isn't repeated for failMemoryMs
+  // (sources.js tries 4 Overpass servers per query, and the same query again for every language). Other services are never skipped.
   const health = new Map(), failed = new Map(); // host → { fails, downUntil }, request key → time until which it is refused
   const healthOf = (h) => { if (!health.has(h)) health.set(h, { fails: 0, downUntil: 0 }); return health.get(h); };
   const refuse = (host) => new Error(`host down: ${host}`);
-  const skipIfDown = (key, host) => { if (Date.now() < (failed.get(key) || 0) || Date.now() < healthOf(host).downUntil) throw refuse(host); };
+  const skipIfDown = (key, host) => { if (watched(host) && (Date.now() < (failed.get(key) || 0) || Date.now() < healthOf(host).downUntil)) throw refuse(host); };
   function noteFailure(key, host) {
+    if (!watched(host)) return;
     const h = healthOf(host);
     failed.set(key, Date.now() + failMemoryMs);
     if (++h.fails >= 2) { h.fails = 0; h.downUntil = Date.now() + downMs; if (!stats.down.includes(host)) stats.down.push(host); }
@@ -67,20 +69,18 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
     } catch { /* no cache yet */ }
   }
   const hostState = (h) => { if (!hosts.has(h)) hosts.set(h, { next: 0, active: 0, queue: [] }); return hosts.get(h); };
-  async function acquire(h, signal) {
+  async function acquire(h, signal) { // a freed slot is handed straight to the first waiter, so a newcomer can't overtake it
     const s = hostState(h);
-    while (s.active >= slots(h)) {
-      await new Promise((resolve, reject) => {
-        if (signal?.aborted) return reject(abortErr());
-        const stop = () => { s.queue.splice(s.queue.indexOf(go), 1); reject(abortErr()); };
-        const go = () => { signal?.removeEventListener("abort", stop); resolve(); };
-        s.queue.push(go);
-        signal?.addEventListener("abort", stop, { once: true });
-      });
-    }
-    s.active++;
+    if (s.active < slots(h)) { s.active++; return; }
+    await new Promise((resolve, reject) => {
+      if (signal?.aborted) return reject(abortErr());
+      const stop = () => { const i = s.queue.indexOf(go); if (i >= 0) s.queue.splice(i, 1); reject(abortErr()); };
+      const go = () => { signal?.removeEventListener("abort", stop); resolve(); };
+      s.queue.push(go);
+      signal?.addEventListener("abort", stop, { once: true });
+    });
   }
-  function release(h) { const s = hostState(h); s.active--; const next = s.queue.shift(); if (next) next(); }
+  function release(h) { const s = hostState(h), next = s.queue.shift(); if (next) next(); else s.active--; }
   const checkDeadline = () => { if (Date.now() > deadline) throw new Error("time budget used up; no new requests"); };
 
   async function f(url, opts = {}) {
@@ -92,6 +92,7 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
     const host = new URL(url).hostname, signal = opts.signal;
     skipIfDown(key, host);
     const hs = (stats.hosts[host] ||= { requests: 0, ms: 0 });
+    const backoff = async (ms) => { try { await pause(ms, signal); } catch (e) { noteFailure(key, host); throw e; } }; // giving up during a back-off still counts as a failure
     await acquire(host, signal);
     try {
       for (let attempt = 0; ; attempt++) {
@@ -104,9 +105,9 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
         const t0 = Date.now();
         let res;
         try { res = await baseFetch(url, { ...opts, headers: { ...(opts.headers || {}), "User-Agent": UA, "Api-User-Agent": UA } }); }
-        catch (e) { hs.ms += Date.now() - t0; if (attempt < 2 && e.name !== "AbortError") { await pause(3000 * (attempt + 1), signal); continue; } noteFailure(key, host); throw e; }
+        catch (e) { hs.ms += Date.now() - t0; if (attempt < 2 && e.name !== "AbortError") { await backoff(3000 * (attempt + 1)); continue; } noteFailure(key, host); throw e; }
         const busy = /overpass/.test(host) ? 3 : 2; // Overpass is often busy: wait longer and retry more
-        if ((res.status === 429 || res.status >= 500) && attempt < busy) { hs.ms += Date.now() - t0; await pause((/overpass/.test(host) ? 20000 : 5000) * (attempt + 1), signal); continue; }
+        if ((res.status === 429 || res.status >= 500) && attempt < busy) { hs.ms += Date.now() - t0; await backoff((/overpass/.test(host) ? 20000 : 5000) * (attempt + 1)); continue; }
         const body = await res.text();
         hs.ms += Date.now() - t0;
         if (res.status === 429 || res.status >= 500) noteFailure(key, host); else healthOf(host).fails = 0;
@@ -123,7 +124,8 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
   // keep successful answers for the next run
   f.save = () => {
     if (!cacheFile) return;
-    const entries = [...cache].filter(([, c]) => c.status >= 200 && c.status < 300);
+    // (Overpass reports its own runtime errors/timeouts as a "remark" in an HTTP 200 answer: not worth keeping)
+    const entries = [...cache].filter(([, c]) => c.status >= 200 && c.status < 300 && !c.body.includes('"remark"'));
     fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
     fs.writeFileSync(cacheFile, JSON.stringify({ v: 1, entries }));
     console.log(`HTTP cache: saved ${entries.length} answers`);
