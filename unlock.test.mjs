@@ -112,3 +112,116 @@ test("seal and open reject a credential id that isn't a non-empty string", async
     await assert.rejects(U.open(key, sealed, bad));
   }
 });
+
+// --- WebAuthn wrappers: each test gets a fresh sandbox with fake browser globals ---
+function loadWith(extra = {}) {
+  const calls = {};
+  const sandbox = { crypto: globalThis.crypto, TextEncoder, TextDecoder, btoa, atob, Uint8Array, location: { hostname: "localhost" }, ...extra };
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, "unlock.js"), "utf8"), sandbox, { filename: "unlock.js" });
+  return { W: sandbox.Unlock, calls };
+}
+function fakeNav(calls, { create, get }) {
+  return { credentials: {
+    create: async (arg) => { calls.create = arg; return create(); },
+    get: async (arg) => { calls.get = arg; return get(); },
+  } };
+}
+const cred = (prfResult) => ({ rawId: new Uint8Array(32).fill(5).buffer, getClientExtensionResults: () => ({ prf: prfResult }) });
+const bytes = (x) => Array.from(new Uint8Array(x.buffer ?? x, x.byteOffset ?? 0, x.byteLength));
+
+test("createPasskey asks for a user-verified passkey with PRF on this host", async () => {
+  const calls = {};
+  const { W } = loadWith({ navigator: fakeNav(calls, { create: () => cred({ enabled: true }) }) });
+  const id = await W.createPasskey("me");
+  assert.equal(id, W.b64uEnc(new Uint8Array(32).fill(5)));
+  const pk = calls.create.publicKey;
+  assert.equal(pk.rp.id, "localhost");
+  assert.equal(pk.authenticatorSelection.userVerification, "required");
+  assert.equal(pk.authenticatorSelection.residentKey, "preferred");
+  assert.ok(pk.extensions.prf);
+  assert.deepEqual(plain(pk.pubKeyCredParams.map((p) => p.alg)), [-7, -257]);
+  assert.equal(pk.user.id.length, 16);
+  assert.equal(pk.challenge.length, 32);
+});
+
+test("createPasskey returns null when PRF isn't enabled", async () => {
+  const { W } = loadWith({ navigator: fakeNav({}, { create: () => cred({ enabled: false }) }) });
+  assert.equal(await W.createPasskey("me"), null);
+});
+
+test("prfSecret sends the stored salt and credential", async () => {
+  const calls = {};
+  const { W } = loadWith({ navigator: fakeNav(calls, { get: () => cred({ results: { first: prf(9) } }) }) });
+  const id = b64(32), salt = W.newSalt();
+  await W.prfSecret(id, salt);
+  const pk = calls.get.publicKey;
+  assert.deepEqual(bytes(pk.allowCredentials[0].id), bytes(W.b64uDec(id)));
+  assert.deepEqual(bytes(pk.extensions.prf.eval.first), bytes(W.b64uDec(salt)));
+  assert.equal(pk.userVerification, "required");
+  assert.equal(pk.rpId, "localhost");
+});
+
+test("prfSecret returns the PRF bytes", async () => {
+  const { W } = loadWith({ navigator: fakeNav({}, { get: () => cred({ results: { first: prf(9).buffer } }) }) });
+  const out = await W.prfSecret(b64(32), W.newSalt());
+  assert.deepEqual(bytes(out), bytes(prf(9)));
+});
+
+test("prfSecret passes a cancel through", async () => {
+  const { W } = loadWith({ navigator: fakeNav({}, { get: () => { throw Object.assign(new Error("x"), { name: "NotAllowedError" }); } }) });
+  await assert.rejects(W.prfSecret(b64(32), W.newSalt()), { name: "NotAllowedError" });
+});
+
+test("prfSecret rejects without PRF output", async () => {
+  const { W } = loadWith({ navigator: fakeNav({}, { get: () => cred({}) }) });
+  await assert.rejects(W.prfSecret(b64(32), W.newSalt()), { message: "no-prf" });
+});
+
+test("prfSecret fails fast on a missing credential id", async () => {
+  const calls = {};
+  const { W } = loadWith({ navigator: fakeNav(calls, { get: () => cred({ results: { first: prf(9) } }) }) });
+  await assert.rejects(W.prfSecret("", W.newSalt()), { message: "Missing credential id" });
+  assert.equal(calls.get, undefined);
+});
+
+const PKC = (o) => Object.assign(function PublicKeyCredential() {}, o);
+test("supported is true with a platform authenticator", async () => {
+  const { W } = loadWith({ PublicKeyCredential: PKC({ isUserVerifyingPlatformAuthenticatorAvailable: async () => true }) });
+  assert.equal(await W.supported(), true);
+});
+test("supported is false without PublicKeyCredential", async () => {
+  assert.equal(await loadWith().W.supported(), false);
+});
+test("supported is false when no platform authenticator is available", async () => {
+  const { W } = loadWith({ PublicKeyCredential: PKC({ isUserVerifyingPlatformAuthenticatorAvailable: async () => false }) });
+  assert.equal(await W.supported(), false);
+});
+test("supported is false when the browser reports no PRF", async () => {
+  const { W } = loadWith({ PublicKeyCredential: PKC({ isUserVerifyingPlatformAuthenticatorAvailable: async () => true, getClientCapabilities: async () => ({ "extension:prf": false }) }) });
+  assert.equal(await W.supported(), false);
+});
+test("supported is true when capabilities don't mention PRF", async () => {
+  const { W } = loadWith({ PublicKeyCredential: PKC({ isUserVerifyingPlatformAuthenticatorAvailable: async () => true, getClientCapabilities: async () => ({}) }) });
+  assert.equal(await W.supported(), true);
+});
+test("supported never rejects", async () => {
+  const { W } = loadWith({ PublicKeyCredential: PKC({ isUserVerifyingPlatformAuthenticatorAvailable: async () => { throw new Error("boom"); } }) });
+  assert.equal(await W.supported(), false);
+});
+
+test("forgetPasskey signals the unknown credential", async () => {
+  const seen = [];
+  const { W } = loadWith({ PublicKeyCredential: PKC({ signalUnknownCredential: async (a) => { seen.push(plain(a)); } }) });
+  await W.forgetPasskey("abc");
+  assert.deepEqual(seen, [{ rpId: "localhost", credentialId: "abc" }]);
+});
+test("forgetPasskey resolves when the signal API is missing", async () => {
+  await loadWith({ PublicKeyCredential: PKC({}) }).W.forgetPasskey("abc");
+  await loadWith().W.forgetPasskey("abc");
+});
+test("forgetPasskey resolves when the signal throws or rejects", async () => {
+  await loadWith({ PublicKeyCredential: PKC({ signalUnknownCredential: () => { throw new Error("x"); } }) }).W.forgetPasskey("abc");
+  await loadWith({ PublicKeyCredential: PKC({ signalUnknownCredential: async () => { throw new Error("x"); } }) }).W.forgetPasskey("abc");
+});
