@@ -97,8 +97,8 @@ async function buildWalk(W, lang, log = () => {}) {
     "unplaced:", W.generator ? "-" : stops.filter((s) => !s.src && !s.fixed).map((s) => s.id).join(","));
 
   // 4. Walking route
-  let line = null, km = null;
-  if (online) try { log("Calculating the walking route…"); ({ line, km } = await Src.walkingRoute(stops)); dbg("route", km.toFixed(2), "km"); } catch (e) { dbg("route failed", String(e)); }
+  let line = null, km = null, legs = null;
+  if (online) try { log("Calculating the walking route…"); ({ line, km, legs } = await Src.walkingRoute(stops)); dbg("route", km.toFixed(2), "km,", legs.length, "legs"); } catch (e) { dbg("route failed", String(e)); }
   line = line || stops.map((s) => ({ lat: s.lat, lon: s.lon }));
 
   // 5. Other sights along the way (OpenStreetMap objects linked to Wikipedia/Wikidata)
@@ -115,7 +115,7 @@ async function buildWalk(W, lang, log = () => {}) {
     seen.add(key);
     live.push({ title: name, lat: e.lat, lon: e.lon, wp: /^[a-z-]{2,12}:.{1,200}$/.test(t.wikipedia || "") ? t.wikipedia : null, wd: /^Q\d{1,12}$/.test(t.wikidata || "") ? t.wikidata : null });
   }
-  return { stops, line, km, live: live.slice(0, 80), online };
+  return { stops, line, km, legs: legs && legs.length === stops.length - 1 ? legs : null, live: live.slice(0, 80), online };
 }
 // Short Wikipedia text for a sight along the way
 async function sightText(s, lang) {

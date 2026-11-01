@@ -6,7 +6,9 @@ const U = window.Util;
 const { str, okLat, okLon, dist, norm, fetchJSON, sleep, dbg } = U;
 
 // ---------- OpenStreetMap: Overpass ----------
-const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+// Public Overpass instances (see wiki.openstreetmap.org/wiki/Overpass_API#Public_Overpass_API_instances); tried in order.
+const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
 async function overpass(q) {
   for (const u of OVERPASS) {
     try {
@@ -231,11 +233,27 @@ function orderStops(stops, start) {
 }
 
 // ---------- walking route (OSRM, FOSSGIS) ----------
+// Walking route through the stops, with turn-by-turn steps per leg (stop i → stop i+1).
+// legs: [{ line: [[lat, lon], ...], steps: [{ t: type, m: modifier, n: street name, i: index in line, x: roundabout exit, b: bearing after }] }]
 async function walkingRoute(stops) {
   const coords = stops.map((s) => `${s.lon.toFixed(6)},${s.lat.toFixed(6)}`).join(";");
-  const r = await fetchJSON(`https://routing.openstreetmap.de/routed-foot/route/v1/foot/${coords}?overview=full&geometries=geojson`, {}, 25000);
-  const line = r.routes[0].geometry.coordinates.filter(([lo, la]) => okLat(la) && okLon(lo)).map(([lon, lat]) => ({ lat, lon }));
-  return { line, km: r.routes[0].distance / 1000 };
+  const r = await fetchJSON(`https://routing.openstreetmap.de/routed-foot/route/v1/foot/${coords}?overview=full&geometries=geojson&steps=true`, {}, 30000);
+  const route = r.routes[0];
+  const line = route.geometry.coordinates.filter(([lo, la]) => okLat(la) && okLon(lo)).map(([lon, lat]) => ({ lat, lon }));
+  const legs = (route.legs || []).map((leg) => {
+    const pts = [], steps = [];
+    for (const st of leg.steps || []) {
+      const g = (st.geometry?.coordinates || []).filter(([lo, la]) => okLat(la) && okLon(lo));
+      const mv = st.maneuver || {};
+      const at = Array.isArray(mv.location) && okLat(mv.location[1]) ? [+mv.location[1].toFixed(6), +mv.location[0].toFixed(6)] : null;
+      // index of the maneuver point in the leg line
+      if (at) { if (!pts.length || pts[pts.length - 1][0] !== at[0] || pts[pts.length - 1][1] !== at[1]) pts.push(at); }
+      steps.push({ t: str(mv.type, 20), m: str(mv.modifier, 20), n: str(st.name, 80), i: Math.max(0, pts.length - 1), x: Number.isInteger(mv.exit) ? mv.exit : undefined, b: Number.isFinite(mv.bearing_after) ? Math.round(mv.bearing_after) : undefined });
+      for (const [lo, la] of g.slice(1)) pts.push([+la.toFixed(6), +lo.toFixed(6)]);
+    }
+    return { line: pts, steps };
+  });
+  return { line, km: route.distance / 1000, legs };
 }
 
 // ---------- geocoding (Nominatim; max 1 request per second) ----------

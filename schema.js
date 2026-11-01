@@ -96,6 +96,25 @@ function checkCities(c) {
   return errs;
 }
 
+// Turn-by-turn legs between stops (see Sources.walkingRoute)
+const STEP_TYPES = ["depart", "arrive", "turn", "new name", "continue", "merge", "on ramp", "off ramp", "fork", "end of road", "use lane", "roundabout", "rotary", "roundabout turn", "exit roundabout", "exit rotary", "notification"];
+const MODIFIERS = ["uturn", "sharp right", "right", "slight right", "straight", "slight left", "left", "sharp left"];
+function cleanLeg(l) {
+  if (!l || !Array.isArray(l.line) || !Array.isArray(l.steps)) return null;
+  const line = l.line.filter((p) => Array.isArray(p) && okLat(p[0]) && okLon(p[1])).slice(0, 5000).map((p) => [p[0], p[1]]);
+  if (line.length < 1) return null;
+  const steps = l.steps.slice(0, 300).map((s) => s && ({
+    t: STEP_TYPES.includes(s.t) ? s.t : "turn", m: MODIFIERS.includes(s.m) ? s.m : "", n: str(s.n, 80),
+    i: Number.isInteger(s.i) && s.i >= 0 && s.i < line.length ? s.i : 0, x: Number.isInteger(s.x) && s.x > 0 && s.x < 20 ? s.x : undefined,
+    b: Number.isFinite(s.b) ? s.b : undefined,
+  })).filter(Boolean);
+  return { line, steps };
+}
+function cleanLegs(legs, nStops) {
+  if (!Array.isArray(legs) || legs.length !== nStops - 1) return null;
+  const out = legs.map(cleanLeg);
+  return out.every(Boolean) ? out : null;
+}
 // Ready-made walk data from the GitHub build (built/*.json): treated as untrusted and sanitised like everything else.
 function cleanBuilt(b) {
   if (!b || typeof b !== "object" || !Array.isArray(b.stops)) return null;
@@ -112,8 +131,9 @@ function cleanBuilt(b) {
     title: str(x.title, 120), lat: x.lat, lon: x.lon, text: str(x.text, 600), url: safeUrl(x.url),
     wp: /^[a-z-]{2,12}:.{1,200}$/.test(x.wp || "") ? x.wp : null, wd: /^Q\d{1,12}$/.test(x.wd || "") ? x.wd : null,
   }));
-  return { hash: str(b.hash, 20), lang: Src.LANGS.includes(b.lang) ? b.lang : null, builtAt: str(b.builtAt, 40),
+  const legs = cleanLegs(b.legs, stops.length);
+  return { hash: str(b.hash, 20), lang: Src.LANGS.includes(b.lang) ? b.lang : null, builtAt: str(b.builtAt, 40), legs,
     stops, line: line.length > 1 ? line : stops.map((p) => ({ lat: p.lat, lon: p.lon })), km: typeof b.km === "number" && isFinite(b.km) ? b.km : null, live };
 }
-window.Schema = { cleanBuilt, cleanId, strList, okPoint, cleanStop, cleanSource, cleanWalk, validFile, checkWalk, checkCities, KINDS };
+window.Schema = { cleanLeg, cleanLegs, cleanBuilt, cleanId, strList, okPoint, cleanStop, cleanSource, cleanWalk, validFile, checkWalk, checkCities, KINDS };
 })();

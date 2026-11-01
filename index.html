@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://tile.openstreetmap.org https://commons.wikimedia.org https://upload.wikimedia.org https://opendata.brussels.be https://opendata.bruxelles.be https://data.stad.gent; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://overpass.kumi.systems https://nominatim.openstreetmap.org https://routing.openstreetmap.de https://www.wikidata.org https://query.wikidata.org https://*.wikipedia.org https://opendata.brussels.be https://opendata.bruxelles.be https://data.stad.gent; font-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://tile.openstreetmap.org https://commons.wikimedia.org https://upload.wikimedia.org https://opendata.brussels.be https://opendata.bruxelles.be https://data.stad.gent; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://overpass.private.coffee https://maps.mail.ru https://overpass.kumi.systems https://nominatim.openstreetmap.org https://routing.openstreetmap.de https://www.wikidata.org https://query.wikidata.org https://*.wikipedia.org https://opendata.brussels.be https://opendata.bruxelles.be https://data.stad.gent; font-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#f5c518">
@@ -47,6 +47,8 @@
     <div id="dMeta"></div>
     <p id="dText"></p>
     <div id="dLinks" class="links"></div>
+    <button id="btnContinue" class="primary hidden">Continue ›</button>
+    <button id="btnGo" class="hidden">Walk here ›</button>
     <div class="row">
       <button id="btnPrev">‹ Prev</button>
       <button id="btnSpeak">🔊 Read</button>
@@ -63,7 +65,7 @@
     <div id="cityList" class="chips"></div>
     <div id="walkList" class="walks"><p class="small">Loading walks…</p></div>
     <p id="walkDesc"></p>
-    <label class="chk">Texts in <select id="optLang"></select></label>
+    <label class="chk">Texts and directions in <select id="optLang"></select></label>
     <label class="chk"><input type="checkbox" id="optVoice" checked> Read stories aloud on arrival</label>
     <button id="btnStart" class="primary" disabled>Start the walk</button>
     <button id="btnDemo" class="link" disabled>Try a demo (simulated walk)</button>
@@ -77,7 +79,9 @@
     <ol id="stopList"></ol>
     <label class="chk"><input type="checkbox" id="optVoice2"> Read aloud on arrival</label>
     <label class="chk"><input type="checkbox" id="optSights" checked> Alert me about sights on the way</label>
-    <label class="chk">Texts in <select id="optLang2"></select></label>
+    <label class="chk"><input type="checkbox" id="optSpeakNav"> Speak directions at turns</label>
+    <label class="chk"><input type="checkbox" id="optSound" checked> Sound and vibration at turns and stops</label>
+    <label class="chk">Texts and directions in <select id="optLang2"></select></label>
     <div class="row">
       <button id="btnRefresh">Refresh walk data</button>
       <button id="btnReset">Reset progress</button>
@@ -99,6 +103,7 @@
     <div class="row">
       <button id="btnCopyLog">Copy log</button>
       <button id="btnTestSpeech">Test speech</button>
+      <button id="btnTestCues">Test sound &amp; vibration</button>
       <button id="btnTestSources">Test data sources</button>
       <button id="btnClearLog">Clear</button>
     </div>
@@ -111,6 +116,7 @@
 <script src="sources.js"></script>
 <script src="schema.js"></script>
 <script src="builder.js"></script>
+<script src="nav.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

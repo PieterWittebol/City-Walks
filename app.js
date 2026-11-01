@@ -17,7 +17,8 @@ const S = {
   stops: [], sights: [], line: null, km: null,
   visited: new Set(), announced: new Set(), target: 0, focus: 0,
   pos: null, acc: 50, heading: null, headingSrc: null, follow: true,
-  opts: Object.assign({ voice: true, sights: true, lang: "auto" }, LS.get("bd:opts", {})), demo: null, started: false,
+  opts: Object.assign({ voice: true, sights: true, lang: "auto", speakNav: false, sound: true }, LS.get("bd:opts", {})), demo: null, started: false,
+  mode: "nav", legs: null, nav: null, offWalk: false, cued: null,
 };
 const LANG_NAMES = { auto: "Automatic", en: "English", nl: "Nederlands", fr: "Français", de: "Deutsch" };
 function contentLang() {
@@ -67,7 +68,7 @@ function drawLine() { routeLayer.setLatLngs((S.line || []).map((p) => [p.lat, p.
 function fitWalk() { if (S.stops.length) map.fitBounds(L.latLngBounds(S.stops.map((s) => [s.lat, s.lon])), { padding: [30, 30], maxZoom: 17 }); }
 
 // ---------- load a walk: local cache → ready-made data from the GitHub build → build on the phone ----------
-const CACHE_VER = 5;
+const CACHE_VER = 6;
 const BUILT_FILE = /^[a-z0-9-]+\.[a-z]{2}\.json$/;
 let builtIndex = null, builtIndexAt = 0;
 async function getBuiltIndex(fresh) {
@@ -92,7 +93,7 @@ async function loadPrebuilt(lang, fresh) {
   } catch (e) { dbg("prebuilt failed", file, String(e)); return null; }
 }
 function useBuilt(b) {
-  S.stops = b.stops; S.line = b.line; S.km = b.km;
+  S.stops = b.stops; S.line = b.line; S.km = b.km; S.legs = Schema.cleanLegs(b.legs, b.stops.length); S.nav = null;
   S.sights = S.walk.sights.map((s) => ({ ...s })).concat(b.live || []);
 }
 async function build(force = false, log = () => {}) {
@@ -109,7 +110,7 @@ async function build(force = false, log = () => {}) {
   let r;
   try { r = await Builder.buildWalk(S.walk, lang, log); }
   catch (e) { dbg("build failed", String(e)); throw new Error("Couldn't load this walk's data (" + (e.message || e) + "). Check your connection and try again."); }
-  const b = { hash: S.rawHash, lang, stops: r.stops, line: r.line, km: r.km, live: r.live };
+  const b = { hash: S.rawHash, lang, stops: r.stops, line: r.line, km: r.km, legs: r.legs, live: r.live };
   useBuilt(b);
   if (r.online) LS.set(ck, { ...b, v: CACHE_VER, origin: "device", ts: Date.now() });
   dbg("built on device", r.stops.length, "stops,", r.live.length, "sights");
@@ -119,10 +120,9 @@ const sightInfo = (s) => Builder.sightText(s, contentLang());
 // ---------- UI ----------
 function render(expand) {
   if (!S.stops.length) return;
-  const t = S.stops[S.target], f = S.stops[S.focus];
+  const f = S.stops[S.focus], arrived = S.mode === "arrived";
   $("progress").textContent = `${S.visited.size} / ${S.stops.length}`;
-  $("navTitle").textContent = `${S.target + 1}. ${t.title}`;
-  $("dMeta").textContent = `${S.focus + 1}. ${f.title}` + (f.artist ? ` · ${f.artist}` : "") + (f.year ? ` · ${f.year}` : "") + (f.address ? ` · ${f.address}` : "");
+  $("dMeta").textContent = (arrived && S.focus === S.target ? "You're here · " : S.focus === S.target ? "Up next · " : "") + `${S.focus + 1}. ${f.title}` + (f.artist ? ` · ${f.artist}` : "") + (f.year ? ` · ${f.year}` : "") + (f.address ? ` · ${f.address}` : "");
   $("dText").textContent = f.text || "No description available yet.";
   const links = $("dLinks"); links.replaceChildren();
   if (f.credit) links.append(el("span", { textContent: f.credit }));
@@ -130,6 +130,13 @@ function render(expand) {
   $("btnSeen").textContent = S.visited.has(f.id) ? "↺ Unsee" : "✓ Seen";
   const img = $("dImg"), src = safeImg(f.img);
   if (src) { img.onerror = () => img.classList.add("hidden"); img.src = src; img.alt = f.title; img.classList.remove("hidden"); } else { img.removeAttribute("src"); img.classList.add("hidden"); }
+  // arrival: stay on this stop until the walker taps Continue
+  const next = nextAfter(S.target);
+  $("btnContinue").classList.toggle("hidden", !(arrived && S.focus === S.target));
+  $("btnContinue").textContent = next == null ? "Finish the walk ✓" : `Continue to ${next + 1}. ${S.stops[next].title} ›`;
+  $("btnGo").classList.toggle("hidden", S.focus === S.target || !S.started);
+  $("btnGo").textContent = `Walk to ${S.focus + 1}. ${f.title} ›`;
+  $("sheet").classList.toggle("arrived", arrived);
   if (expand) $("sheet").classList.remove("collapsed");
   drawStops(); updateNav(); renderList();
 }
@@ -138,19 +145,88 @@ function renderList() {
   S.stops.forEach((s, i) => {
     const li = el("li", { textContent: s.title + (s.artist ? ` — ${s.artist}` : "") });
     if (S.visited.has(s.id)) li.classList.add("seen"); if (i === S.target) li.classList.add("cur");
-    li.onclick = () => { S.target = S.focus = i; $("menu").classList.add("hidden"); render(true); map.setView([s.lat, s.lon], 17); setFollow(false); };
+    li.onclick = () => { $("menu").classList.add("hidden"); goTo(i); map.setView([s.lat, s.lon], 17); setFollow(false); };
     ol.appendChild(li);
   });
 }
+// ---------- turn-by-turn navigation ----------
+// The walk's legs (stop i-1 → stop i) come ready-made from the build; from elsewhere (start, off route, a stop
+// chosen out of order) a route is requested live, at most every 20 s.
+const legSource = () => (S.legs && S.target > 0 && S.legs[S.target - 1] && !S.offWalk) ? "walk" : "live";
+function ensureLeg() {
+  const want = legSource() + ":" + S.target;
+  if (S.nav && S.nav.key === want) return S.nav;
+  if (want.startsWith("walk")) { S.nav = { key: want, P: Nav.prepare(S.legs[S.target - 1]), hint: 0, offCount: 0 }; dbg("nav: walk leg to", S.stops[S.target].id); return S.nav; }
+  S.nav = null; requestLiveLeg(); return null;
+}
+async function requestLiveLeg(force) {
+  const now = Date.now(), t = S.stops[S.target], target = S.target;
+  if (!S.pos || S.liveBusy || (S.liveAt && now - S.liveAt < (force ? 5000 : 20000))) return;
+  S.liveBusy = true; S.liveAt = now;
+  try {
+    const r = await Src.walkingRoute([S.pos, t]);
+    if (S.target !== target || !r.legs || !r.legs[0]) return;
+    S.nav = { key: "live:" + target, P: Nav.prepare(r.legs[0]), hint: 0, offCount: 0 };
+    dbg("nav: live route to", t.id, Math.round(r.km * 1000) + "m");
+    updateNav();
+  } catch (e) { dbg("nav: live route failed", String(e)); }
+  finally { S.liveBusy = false; }
+}
+function setNavIcon(glyph, rot, cls) {
+  const a = $("arrow"); a.textContent = glyph; a.style.transform = `rotate(${rot}deg)`;
+  $("arrowWrap").className = cls || "";
+}
 function updateNav() {
   if (!S.stops.length) return;
-  const t = S.stops[S.target];
-  if (!S.pos) { $("navDist").textContent = "Waiting for GPS…"; legLayer.setLatLngs([]); return; }
-  const d = dist(S.pos, t), b = bearing(S.pos, t), rel = S.heading == null ? b : b - S.heading;
-  $("arrow").style.transform = `rotate(${rel - 90}deg)`;
-  $("arrowWrap").classList.toggle("here", d < arriveRadius());
-  $("navDist").textContent = `${d < 1000 ? Math.round(d / 5) * 5 + " m" : (d / 1000).toFixed(1) + " km"} · ~${Math.max(1, Math.round(d * 1.3 / 80))} min walk` + (S.heading == null ? " · north-up" : "");
+  const t = S.stops[S.target], lang = contentLang(), W = Nav.words(lang);
+  if (S.mode === "arrived") {
+    setNavIcon("⚑", 0, "here");
+    $("navLabel").textContent = "You've arrived";
+    $("navTitle").textContent = `${S.target + 1}. ${t.title}`;
+    $("navDist").textContent = "Take your time: the story is below. Tap Continue when you're ready.";
+    legLayer.setLatLngs([]); return;
+  }
+  if (!S.pos) { setNavIcon("➤", -90, ""); $("navLabel").textContent = "Next stop"; $("navTitle").textContent = `${S.target + 1}. ${t.title}`; $("navDist").textContent = "Waiting for GPS…"; legLayer.setLatLngs([]); return; }
+  const dStop = dist(S.pos, t), stopLine = `${S.target + 1}. ${t.title} · ${Nav.fmt(dStop)} · ~${Math.max(1, Math.round(dStop * 1.3 / 80))} min`;
+  const nav = ensureLeg();
+  if (nav) {
+    const loc = Nav.locate(nav.P, S.pos, nav.hint);
+    const tol = Math.max(35, Math.min(60, S.acc * 1.2));
+    const off = loc.off > tol;
+    if (off) { nav.offCount++; if (nav.offCount >= 3) { if (nav.offCount === 3) dbg("nav: off route", Math.round(loc.off) + "m"); S.offWalk = true; requestLiveLeg(loc.off > 150); } }
+    else { nav.offCount = 0; nav.hint = loc.seg; }
+    if (!off || nav.offCount < 3) { // on the route (or only briefly off it): turn-by-turn
+      const up = Nav.upcoming(nav.P, loc.along);
+      const ic = Nav.icon(up.step);
+      setNavIcon(ic.glyph, ic.rot, up.dist < 30 ? "soon" : "");
+      $("navLabel").textContent = up.step.t === "arrive" ? W.in(Nav.fmt(up.dist)) : up.dist < 30 ? W.now : W.in(Nav.fmt(up.dist));
+      $("navTitle").textContent = Nav.text(up.step, lang, t.title);
+      $("navDist").textContent = "Next stop: " + stopLine;
+      // remaining part of this leg in blue
+      const rest = [[S.pos.lat, S.pos.lon]].concat(nav.P.pts.slice(loc.seg + 1).map((p) => [p.lat, p.lon]));
+      legLayer.setLatLngs(rest);
+      announce(up, t, lang);
+      return;
+    }
+  }
+  // fallback: compass arrow straight to the stop
+  const b = bearing(S.pos, t), rel = S.heading == null ? b : b - S.heading;
+  setNavIcon("➤", rel - 90, dStop < arriveRadius() ? "here" : "");
+  $("navLabel").textContent = "Next stop (follow the arrow" + (S.heading == null ? ", north is up)" : ")");
+  $("navTitle").textContent = `${S.target + 1}. ${t.title}`;
+  $("navDist").textContent = `${Nav.fmt(dStop)} · ~${Math.max(1, Math.round(dStop * 1.3 / 80))} min walk`;
   legLayer.setLatLngs([[S.pos.lat, S.pos.lon], [t.lat, t.lon]]);
+}
+// Cue once per manoeuvre, ~25 m before it: buzz/haptic + chime, and spoken if enabled
+function announce(up, t, lang) {
+  if (up.step.t === "arrive" || up.dist > 28) return;
+  const k = S.nav.key + ":" + up.step.along.toFixed(0);
+  if (S.cued === k) return;
+  S.cued = k;
+  cue("turn");
+  const line = Nav.text(up.step, lang, t.title);
+  dbg("nav: cue", line);
+  if (S.opts.speakNav && synth && !synth.speaking) speakNow(line, lang);
 }
 const arriveRadius = () => Math.max(25, Math.min(45, S.acc * 0.8));
 
@@ -202,7 +278,39 @@ function speak(s) {
   if (!S.opts.voice || !synth) return;
   if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(() => speakNow(stopSpeechText(s), stopLang(s)), 300); } else speakNow(stopSpeechText(s), stopLang(s));
 }
-const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
+// ---------- cues: vibration (Android), haptic tick (iPhone, iOS 18+) and a short chime ----------
+// iPhones don't support navigator.vibrate in any browser. Two workarounds: a sound, and the haptic tick iOS 18+
+// gives when a switch control is toggled (best effort; Apple may change this).
+let audioCtx = null, hapticLabel = null;
+function unlockCues() { // must run inside a tap
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch (e) { dbg("audio unavailable", String(e)); }
+  if (!hapticLabel) {
+    const inp = el("input", { type: "checkbox", id: "hapticSwitch", tabIndex: -1 }); inp.setAttribute("switch", "");
+    hapticLabel = el("label", { htmlFor: "hapticSwitch", className: "offscreen", ariaHidden: "true" }, inp);
+    document.body.append(hapticLabel);
+  }
+  dbg("cues: vibrate", "vibrate" in navigator ? "supported" : "not supported (iPhone)", "· audio", audioCtx ? audioCtx.state : "none");
+}
+function chime(kind) {
+  if (!audioCtx || !S.opts.sound) return;
+  try {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const notes = kind === "arrive" ? [660, 880, 1320] : kind === "sight" ? [990] : [880, 1175];
+    notes.forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t0 = audioCtx.currentTime + i * 0.13;
+      o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
+      o.connect(g).connect(audioCtx.destination); o.start(t0); o.stop(t0 + 0.27);
+    });
+  } catch (e) { dbg("chime failed", String(e)); }
+}
+function cue(kind) {
+  const pattern = kind === "arrive" ? [250, 120, 250, 120, 400] : kind === "sight" ? [80] : [150, 80, 150];
+  let ok = false;
+  try { if (navigator.vibrate) ok = navigator.vibrate(pattern); } catch {}
+  if (!ok && hapticLabel) { try { const n = kind === "arrive" ? 3 : kind === "sight" ? 1 : 2; for (let i = 0; i < n; i++) setTimeout(() => hapticLabel.click(), i * 160); } catch {} }
+  chime(kind);
+}
+const buzz = () => cue("sight");
 function setFollow(on) { S.follow = on; $("btnLocate").classList.toggle("on", on); if (on && S.pos) map.panTo([S.pos.lat, S.pos.lon]); }
 
 // ---------- position ----------
@@ -221,16 +329,30 @@ function onPos(lat, lon, acc, gpsHeading, speed) {
   if (S.follow) map.panTo(ll, { animate: true });
   checkArrival(); checkSights(); updateNav();
 }
+function nextAfter(i) {
+  for (let k = 1; k < S.stops.length; k++) { const j = i + k; if (j >= S.stops.length) break; if (!S.visited.has(S.stops[j].id)) return j; }
+  for (let j = 0; j < i; j++) if (!S.visited.has(S.stops[j].id)) return j;
+  return null;
+}
 function checkArrival() {
+  if (S.mode === "arrived") return;
   const i = S.target, t = S.stops[i];
-  if (S.visited.has(t.id) || dist(S.pos, t) > arriveRadius()) return;
+  if (dist(S.pos, t) > arriveRadius()) return;
   S.visited.add(t.id); LS.set(S.key + ":visited", [...S.visited]);
   dbg("arrived", t.id, "dist", Math.round(dist(S.pos, t)), "radius", Math.round(arriveRadius()));
-  buzz([200, 100, 200]);
-  S.focus = i; S.target = firstUnvisited(i);
-  const done = S.visited.size === S.stops.length;
-  toast([["b", "You've arrived: "], ["t", t.title]].concat(done ? [["br"], ["t", "🎉 That was the last stop. Well walked!"]] : []), 8000);
+  S.mode = "arrived"; S.focus = i; S.offWalk = false;
+  cue("arrive");
   speak(t); render(true);
+  $("sheet").scrollTop = 0;
+}
+function continueWalk() {
+  stopSpeech();
+  const next = nextAfter(S.target);
+  if (next == null) { S.mode = "done"; toast([["b", "🎉 Walk finished! "], ["t", "Well walked."]], 8000); dbg("walk finished"); render(false); $("sheet").classList.add("collapsed"); return; }
+  S.mode = "nav"; S.target = S.focus = next; S.nav = null; S.offWalk = false; S.cued = null;
+  $("sheet").classList.add("collapsed");
+  render(false); setFollow(true);
+  if (S.pos) map.setView([S.pos.lat, S.pos.lon], Math.max(map.getZoom(), 18));
 }
 function checkSights() {
   if (!S.opts.sights) return;
@@ -240,7 +362,7 @@ function checkSights() {
     S.announced.add(k);
     sightInfo(s).then((info) => {
       if (!info.text) return;
-      const url = safeUrl(info.url); buzz(80);
+      const url = safeUrl(info.url); buzz();
       toast([["b", "On your way: "], ["t", s.title], ["br"], ["t", info.text]].concat(url ? [["more", "Tap to open on Wikipedia"]] : []), 14000,
         url ? () => window.open(url, "_blank", "noopener,noreferrer") : null);
     });
@@ -352,13 +474,14 @@ async function begin(demo) {
   S.opts.voice = $("optVoice").checked; S.opts.lang = $("optLang").value; saveOpts();
   dbg("start", S.key, demo ? "demo" : "gps", "voice:", S.opts.voice, "lang:", contentLang());
   if (synth) { try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u); } catch (e) { dbg("speech unlock failed", String(e)); } }
+  unlockCues();
   if (!demo) { startCompass(); startGPS(); keepAwake(); }
   $("btnStart").disabled = $("btnDemo").disabled = true;
   try { await build(false, (m) => ($("prep").textContent = m)); }
   catch (e) { dbg("build error", String(e)); $("prep").textContent = e.message; $("btnStart").disabled = $("btnDemo").disabled = false; return; }
   $("prep").textContent = "";
   S.visited = new Set([...S.visited].filter((id) => S.stops.some((s) => s.id === id)));
-  S.target = S.focus = firstUnvisited(0); S.started = true;
+  S.target = S.focus = firstUnvisited(0); S.started = true; S.mode = "nav"; S.nav = null; S.offWalk = false; S.cued = null;
   $("start").classList.add("hidden"); $("sheet").classList.remove("hidden"); $("progress").classList.remove("hidden");
   drawLine(); drawSights(); render(false); fitWalk();
   if (S.pos) { checkArrival(); updateNav(); }
@@ -380,6 +503,12 @@ $("btnSpeak").onclick = (e) => {
   if (speakingNow || (synth && synth.speaking)) { dbg("speech: stop by user"); stopSpeech(); return; }
   const f = S.stops[S.focus]; speakNow(stopSpeechText(f), stopLang(f)); // no cancel()/await first: keeps iOS happy
 };
+function goTo(i) {
+  stopSpeech(); S.target = S.focus = i; S.mode = "nav"; S.nav = null; S.offWalk = false; S.cued = null;
+  dbg("nav: walking to", S.stops[i].id); render(true);
+}
+$("btnContinue").onclick = (e) => { e.stopPropagation(); continueWalk(); };
+$("btnGo").onclick = (e) => { e.stopPropagation(); goTo(S.focus); $("sheet").classList.add("collapsed"); setFollow(true); };
 $("btnSeen").onclick = () => {
   const f = S.stops[S.focus];
   if (S.visited.has(f.id)) S.visited.delete(f.id); else S.visited.add(f.id);
@@ -388,7 +517,7 @@ $("btnSeen").onclick = () => {
   render(true);
 };
 $("btnMenu").onclick = () => {
-  $("optVoice2").checked = S.opts.voice; $("optSights").checked = S.opts.sights; fillLang($("optLang2"));
+  $("optVoice2").checked = S.opts.voice; $("optSights").checked = S.opts.sights; $("optSpeakNav").checked = S.opts.speakNav; $("optSound").checked = S.opts.sound; fillLang($("optLang2"));
   renderList(); $("menu").classList.remove("hidden");
 };
 async function rebuild(force) {
@@ -398,14 +527,14 @@ async function rebuild(force) {
   drawLine(); drawSights(); render(false);
 }
 $("btnClose").onclick = async () => {
-  S.opts.voice = $("optVoice2").checked; S.opts.sights = $("optSights").checked;
+  S.opts.voice = $("optVoice2").checked; S.opts.sights = $("optSights").checked; S.opts.speakNav = $("optSpeakNav").checked; S.opts.sound = $("optSound").checked;
   const langChanged = $("optLang2").value !== S.opts.lang; S.opts.lang = $("optLang2").value; saveOpts();
   $("menu").classList.add("hidden");
   if (langChanged && S.started) { msg("Loading texts in " + LANG_NAMES[contentLang()] + "…", 4000); await rebuild(false); }
 };
 $("btnOtherWalk").onclick = () => {
   if (S.demo) { clearInterval(S.demo); S.demo = null; }
-  stopSpeech(); S.started = false;
+  stopSpeech(); S.started = false; S.mode = "nav"; S.nav = null;
   $("menu").classList.add("hidden"); $("sheet").classList.add("hidden"); $("progress").classList.add("hidden"); $("start").classList.remove("hidden");
   legLayer.setLatLngs([]); fillLang($("optLang"));
   if (S.city) selectCity(S.city, S.entry && S.entry.id);
@@ -421,6 +550,7 @@ $("btnCopyLog").onclick = async () => {
   catch { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); try { document.execCommand("copy"); $("btnCopyLog").textContent = "Copied ✓"; } catch { $("btnCopyLog").textContent = "Select & copy manually"; } }
   setTimeout(() => ($("btnCopyLog").textContent = "Copy log"), 2500);
 };
+$("btnTestCues").onclick = () => { unlockCues(); cue("turn"); setTimeout(() => cue("arrive"), 900); };
 $("btnTestSpeech").onclick = () => {
   stopSpeech(); const l = contentLang();
   speakNow({ nl: "Hallo. Dit is een test van de voorleesfunctie.", fr: "Bonjour. Ceci est un test de la lecture à voix haute.", de: "Hallo. Dies ist ein Test der Vorlesefunktion." }[l] || "Hello. This is a speech test.", l);
@@ -433,7 +563,7 @@ $("btnTestSources").onclick = async () => {
 };
 $("btnClearLog").onclick = () => { LOG.length = 0; LS.set(LOGK, LOG); $("logText").value = ""; };
 $("btnCloseDebug").onclick = () => $("debug").classList.add("hidden");
-$("btnReset").onclick = () => { S.visited.clear(); LS.set(S.key + ":visited", []); S.announced.clear(); S.target = S.focus = 0; render(false); };
+$("btnReset").onclick = () => { S.visited.clear(); LS.set(S.key + ":visited", []); S.announced.clear(); goTo(0); };
 $("btnRefresh").onclick = () => { $("btnRefresh").textContent = "Refreshing…"; rebuild(true); };
 
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {

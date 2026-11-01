@@ -6,6 +6,19 @@ sights you pass on the way. Everything is built from **open data**.
 
 Live: `https://<your-username>.github.io/<this-repo>/`. Add it to your home screen for an app-like experience.
 
+## Walking a route
+
+- **Turn-by-turn:** the build stores the walking route between each pair of stops, with every turn (OSRM). The
+  app shows the next manoeuvre ("In 40 m · Turn left onto Rue du Midi") in the chosen language, cues ~25 m before
+  it, and can speak it (☰ → Speak directions at turns).
+- **Live routing:** to the first stop, to a stop picked out of order, or after walking more than ~40 m off the
+  route for a few seconds, the phone asks OSRM for a fresh route (at most every 20 s). Meanwhile it shows an
+  arrow straight to the stop.
+- **Arriving:** the app stays on that stop with its story until you tap **Continue to …**. Stops close together
+  can't skip each other any more.
+- **Cues:** Android vibrates. iPhones don't let websites vibrate, so you get a short chime instead (needs the
+  silent switch off) and, on iOS 18+, a light haptic tick (best effort). ☰ → Debug log → Test sound & vibration.
+
 ## How the data gets to the phone
 
 A GitHub Action (`.github/workflows/build.yml` + `build.mjs`) runs after every change, every Monday and on demand.
@@ -58,6 +71,7 @@ Not used on purpose: Street Art Cities' data. Its terms don't allow reuse in an 
 | `util.js`, `sources.js`, `schema.js`, `app.js`, `app.css` | The app; `sources.js` holds all open data access, `schema.js` the file format rules |
 | `admin.html`, `admin.js`, `admin.css` | The editor |
 | `builder.js` | Builds a walk from open data (used by the app and the build) |
+| `nav.js` | Turn-by-turn navigation: position on the route, next manoeuvre, wording in EN/NL/FR/DE |
 | `build.mjs`, `.github/workflows/build.yml` | The GitHub build that prepares the data |
 | `leaflet.js`, `leaflet.css` | Map library (Leaflet 1.9.4, BSD-2), kept in the repo so no CDN is needed |
 | `sw.js` | Service worker: offline use, caches map tiles you've already seen |

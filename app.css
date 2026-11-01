@@ -74,3 +74,10 @@ button:disabled{opacity:.45}
 .links{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--mut);margin:-4px 0 12px}
 .links a{color:var(--blue);text-decoration:none}
 select{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid #ccc;background:#fff}
+#btnContinue{margin:4px 0 10px}
+#btnGo{display:block;width:100%;margin:4px 0 10px;background:#eef3fd;color:var(--blue);font-weight:700}
+#arrowWrap.soon{background:#111;color:var(--y)}
+#arrow{display:inline-block;line-height:1}
+#navTitle{white-space:normal;line-height:1.2}
+#sheet.arrived #navLabel{color:var(--green);font-weight:800}
+.offscreen{position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden}
