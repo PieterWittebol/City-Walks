@@ -118,6 +118,8 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
     } finally { release(host); }
   }
   f.stats = stats;
+  // forget which hosts are down and which requests failed (used before the retry round); cached answers stay
+  f.forgetFailures = () => { health.clear(); failed.clear(); };
   // keep successful answers for the next run
   f.save = () => {
     if (!cacheFile) return;
@@ -327,7 +329,7 @@ export async function run({
   }
   // retry failures once more after a pause (public services are sometimes briefly overloaded),
   // then fall back to the previously published version of that walk, if it's still current
-  if (failed.length && !overBudget()) { console.log(`Retrying ${failed.length} failed walk/language combination(s) in 60 s…`); await new Promise((r) => setTimeout(r, Number(process.env.RETRY_WAIT_MS ?? 60000))); }
+  if (failed.length && !overBudget()) { pf.forgetFailures(); console.log(`Retrying ${failed.length} failed walk/language combination(s) in 60 s…`); await new Promise((r) => setTimeout(r, Number(process.env.RETRY_WAIT_MS ?? 60000))); }
   for (const f of failed) {
     try {
       if (overBudget()) throw new Error("time budget used up");

@@ -111,6 +111,19 @@ test("a failed request isn't repeated for the next language", async () => {
   assert.equal((await f(OVERPASS, post(1))).status, 200); // a different request still goes through
 });
 
+test("forgetting failures lets a down host be tried again", async () => {
+  let calls = 0;
+  const f = politeFetch(async () => { calls++; throw abortError(); });
+  await assert.rejects(f(OVERPASS, post(1)), { name: "AbortError" });
+  await assert.rejects(f(OVERPASS, post(2)), { name: "AbortError" });
+  await assert.rejects(f(OVERPASS, post(3)), /host down/);
+  assert.equal(calls, 2);
+  f.forgetFailures();
+  await assert.rejects(f(OVERPASS, post(1)), { name: "AbortError" }); // a request that failed before
+  await assert.rejects(f(OVERPASS, post(4)), { name: "AbortError" }); // a new one
+  assert.equal(calls, 4);
+});
+
 test("other hosts are unaffected", async () => {
   const seen = [];
   const f = politeFetch(async (url) => { seen.push(url); if (/overpass/.test(url)) throw abortError(); return json({}); });
