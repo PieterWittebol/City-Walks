@@ -19,15 +19,37 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # The build stops starting new work after BUILD_BUDGET_MIN and sends no requests after 5 more minutes,
+    # so it finishes well within this limit even when the open data services are slow.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Test the build script
+        run: node --test
+      # Answers from the open data services are kept between runs, so a run after an edit
+      # doesn't have to ask Wikipedia, OpenStreetMap etc. everything again.
+      - name: Restore saved open data answers
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/http-cache.json
+          key: open-data-${{ github.run_id }}
+          restore-keys: open-data-
       - name: Build walk data
         run: node --version && node build.mjs
         env:
           BUILD_MODE: ${{ github.event_name == 'push' && 'incremental' || 'full' }}
+          BUILD_BUDGET_MIN: "20"
+          HTTP_CACHE: .cache/http-cache.json
+          # After an edit: reuse answers up to 8 days old. Mondays and manual runs: ask everything fresh.
+          HTTP_CACHE_MAX_AGE_MIN: ${{ github.event_name == 'push' && '11520' || '0' }}
+      - name: Save open data answers for the next run
+        if: ${{ !cancelled() && hashFiles('.cache/http-cache.json') != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/http-cache.json
+          key: open-data-${{ github.run_id }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
