@@ -48,7 +48,8 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
   const gap = (host) => /overpass/.test(host) ? 1500 : /nominatim/.test(host) ? 1100 : /query\.wikidata/.test(host) ? 500 : /onroerenderfgoed|erfgoed\.net/.test(host) ? 300 : 50;
   const slots = (host) => /(^|\.)wikipedia\.org$|^www\.wikidata\.org$/.test(host) ? 4 : 1;
   const watched = (host) => /^(overpass-api\.de|overpass\.private\.coffee|maps\.mail\.ru|overpass\.kumi\.systems)$/.test(host); // the Overpass endpoints
-  const stats = { requests: 0, cached: 0, refused: 0, hosts: {}, down: [] }; // refused: requests not sent (deadline, host down, recent failure)
+  // refused: requests not sent (deadline, host down, recent failure); pastDeadline: those refused because time ran out
+  const stats = { requests: 0, cached: 0, refused: 0, pastDeadline: 0, hosts: {}, down: [] };
   // An Overpass host that fails twice in a row is skipped for downMs, and a failed request isn't repeated for failMemoryMs
   // (sources.js tries 4 Overpass servers per query, and the same query again for every language). Other services are never skipped.
   const health = new Map(), failed = new Map(); // host → { fails, downUntil }, request key → time until which it is refused
@@ -81,7 +82,7 @@ export function politeFetch(baseFetch, { deadline = Infinity, cacheFile = null, 
     });
   }
   function release(h) { const s = hostState(h), next = s.queue.shift(); if (next) next(); else s.active--; }
-  const checkDeadline = () => { if (Date.now() > deadline) { stats.refused++; throw new Error("time budget used up; no new requests"); } };
+  const checkDeadline = () => { if (Date.now() > deadline) { stats.refused++; stats.pastDeadline++; throw new Error("time budget used up; no new requests"); } };
 
   async function f(url, opts = {}) {
     const method = (opts.method || "GET").toUpperCase();
@@ -281,7 +282,9 @@ export async function run({
   // build one walk in one language; throws when the open data can't be reached, or when part of it wasn't asked
   // (time budget used up, Overpass down): such a walk is retried, else the previous version is kept or phones look it up
   async function buildOne(walk, lang, hash) {
-    const refused0 = pf.stats.refused, missing0 = overpassMissing;
+    // A walk is incomplete when time ran out during it, or when no Overpass server answered at all. A server skipped
+    // as down doesn't count by itself: sources.js then simply asks the next one.
+    const late0 = pf.stats.pastDeadline, missing0 = overpassMissing;
     const r = await Builder.buildWalk(walk, lang, () => {});
     if (!r.online) throw new Error("no open data service answered");
     if (oeEnrich) { try { const n = await oeEnrich(r.stops, lang); oeCount += n; if (n) console.log(`  ${walk.id} (${lang}): ${n} inventory text(s) from Onroerend Erfgoed`); } catch (e) { console.log("OE enrich failed:", e.message); } }
@@ -292,7 +295,7 @@ export async function run({
       if (info.text) { s.text = info.text; s.url = info.url || null; }
     }
     r.live = r.live.filter((s) => s.text);
-    if (pf.stats.refused > refused0 || overpassMissing > missing0) throw new Error("incomplete: open data refused or Overpass unavailable");
+    if (pf.stats.pastDeadline > late0 || overpassMissing > missing0) throw new Error("incomplete: time budget used up or Overpass unavailable");
     const result = { v: FORMAT, hash, lang, builtAt: index.builtAt, stops: r.stops, line: r.line, km: r.km, legs: r.legs, live: r.live };
     if (!Schema.cleanBuilt(result)) throw new Error("result failed validation");
     return result;

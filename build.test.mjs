@@ -316,6 +316,17 @@ test("a walk built while Overpass is unavailable isn't published from that run; 
   for (const f of Object.values(index.walks["x/one"].files)) assert.equal(readJSON(out3, "built", f).builtAt, index.builtAt, f);
 });
 
+test("when the first Overpass server is down but another answers, every walk is still published", async () => {
+  const root = fixtureRoot({ wiki: true });
+  // overpass-api.de (tried first) always times out; the next server answers
+  const firstDown = openData((url) => { if (url.includes("overpass-api.de")) throw abortError(); return json({ elements: [] }); });
+  const out = tmpOut();
+  await run({ root, out, mode: "full", fetchImpl: firstDown, previous: { index: null }, cacheFile: null });
+  const index = readJSON(out, "built", "index.json");
+  assert.deepEqual(Object.keys(index.walks).sort(), ["x/one", "x/two"]);
+  for (const k of ["x/one", "x/two"]) assert.deepEqual(Object.keys(index.walks[k].files).sort(), ["de", "en", "fr", "nl"], k);
+});
+
 test("a walk the deadline cuts off halfway isn't published from that run; the previous version is kept", async () => {
   const root = fixtureRoot({ wiki: true });
   const out1 = tmpOut();
