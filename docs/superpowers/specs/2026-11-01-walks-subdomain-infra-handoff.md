@@ -26,9 +26,11 @@ site at `https://wittebol.be` (GitHub user site `PieterWittebol/pieterwittebol.g
 ## Hard constraints
 
 - **Gate:** don't create the redirect (step 6) until the owner confirms that the City Walks editor update has been
-  deployed **and** opened once in Safari and once in Firefox at the old address. That update deletes a plain-text
-  token from browser storage on `wittebol.be`; once the redirect is live, that cleanup can never run. Steps 1–5 can
-  be done before then.
+  deployed **and** opened at the old address in every browser and on every device where the editor was used
+  (including the phone). That update deletes a plain-text token from browser storage on `wittebol.be`; once the
+  redirect is live, that cleanup can never run. At the old address the owner chooses **Not now** when Touch ID is
+  offered (or taps **Forget this device** before the redirect) and sets up Touch ID only at `walks.wittebol.be`.
+  The owner's new token (and revoking the old one) is the backstop. Steps 1–5 can be done before then.
 - **Never replace a whole Cloudflare ruleset.** Each phase entrypoint (`PUT /zones/{zone}/rulesets/phases/{phase}/entrypoint`)
   holds *all* rules of that phase, including ones the owner already has. Read the entrypoint, then add or update
   only the rules described here, identified by a stable `ref` (e.g. `cw-headers`, `cw-redirect`, `cw-ssl`), so

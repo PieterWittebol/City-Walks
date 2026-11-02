@@ -160,10 +160,12 @@ note.
 
 1. Commit the build fixes (time budget, cache) first; this work builds on them.
 2. Release the editor changes while still on the old address, so the cleanup of any plain-text `cw:auth` runs on
-   `https://wittebol.be` (where a remembered token would be). The owner opens the editor once in Safari and once
-   in Firefox.
+   `https://wittebol.be` (where a remembered token would be). The owner opens the editor at the old address in
+   every browser and on every device where it was used (Safari, Firefox, and the phone). There, choose **Not now**
+   when Touch ID is offered (don't set it up), or tap **Forget this device** before the redirect; set up Touch ID
+   only at `walks.wittebol.be` (a passkey and record made at the old address would be left behind).
 3. The owner creates a new fine-grained token (decided) and revokes the old one on GitHub, so no copy that might
-   have been stored in plain text stays valid.
+   have been stored in plain text stays valid. This is the backstop for any browser or device step 2 missed.
 4. Then move to `walks.wittebol.be` and add the headers and redirect (infra handoff, steps 1–6). After that, set
    `SITE_URL` in the workflow.
 

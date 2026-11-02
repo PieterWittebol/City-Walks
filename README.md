@@ -64,7 +64,7 @@ gets another chance before the retry round.
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
 2. Create `.github/workflows/build.yml` (on github.com: Add file → Create new file, type the full path as the name)
    and paste the workflow.
-3. Check **Actions**: the first run takes about 5–10 minutes. Later runs after an edit are much faster.
+3. Check **Actions**: the first run takes about 15 minutes. Later runs after an edit are much faster.
 
 The workflow has read-only access to the repository and only the rights needed to publish Pages. It uses no
 secrets and only GitHub's own actions, pinned to exact versions.
@@ -117,11 +117,15 @@ GitHub → Settings → Developer settings → Fine-grained tokens → Generate 
 expiration 30–90 days.
 
 **Unlock with Touch ID:** after you sign in with the token, the editor offers to set up a passkey (Touch ID, or
-your device's passkey). The token is then stored in this browser only encrypted, with a key that only exists after
-a successful Touch ID check. Next time, tap **Unlock with Touch ID** instead of pasting the token. **Lock** (top
+your device's passkey): tap **Set up** (Touch ID creates the passkey), then **Turn on** (Touch ID again, to
+encrypt the token). The token is then stored in this browser only encrypted, with a key that only exists after a
+successful Touch ID check. Next time, tap **Unlock with Touch ID** instead of pasting the token. **Lock** (top
 right) wipes the token from memory; **Forget this device** removes the encrypted token. When the token expires or
-is revoked, paste a new one: it's encrypted with the same passkey (one touch). Browsers without passkey PRF support
-work as before: paste the token each time; it's kept for that tab only.
+is revoked, paste a new one and tap **Encrypt with Touch ID**: it's encrypted with the same passkey (one touch).
+Browsers without passkey PRF support work as before: paste the token each time; it's kept for that tab only.
+
+Safari may clear the editor's saved data after about 7 days without a visit (tracking prevention). Then paste the
+token again and set up Touch ID again; delete the old passkey in the Passwords app (search the site's address).
 
 How the editor stays safe:
 
@@ -197,20 +201,31 @@ or via ☰ → Refresh walk data.
 ☰ → Debug log → **Test data sources** checks every open data service from the phone. **Copy log** gives you
 something to paste into a chat or issue. The log contains GPS positions, so share it privately.
 
+**The editor asks for the token again although Touch ID unlock was set up (Safari):** Safari may clear a site's
+saved data after about 7 days without a visit (tracking prevention). Paste the token again and set up Touch ID
+again, then delete the old passkey in the Passwords app (search the site's address).
+
 ## Manual checks (editor)
 
 WebAuthn can't run in the automated tests, so check the editor's sign-in by hand after changing `admin.js`,
 `admin.html` or `unlock.js`, in Safari and Firefox on macOS (Touch ID), with a real fine-grained token.
 Open the browser's developer tools to look at storage (Storage / Application → Local and Session storage).
 
-1. **Enable:** sign in with the token. Expected: "Unlock with Touch ID next time?" → **Set up** → two Touch ID
-   prompts → the city list; the button top right says **Lock**. `localStorage["cw:unlock"]` exists and contains no
-   `github_pat_`; `sessionStorage` contains no `github_pat_`.
+**While moving to walks.wittebol.be:** at the old address (wittebol.be/City-Walks), choose **Not now** when the
+editor offers Touch ID (or tap **Forget this device** before the redirect goes live); set up Touch ID only at
+walks.wittebol.be. Before the redirect, open the editor at the old address in every browser and on every device
+where it was used (including the phone). The new token (and revoking the old one) is the backstop.
+
+1. **Enable:** sign in with the token. Expected: "Unlock with Touch ID next time?" → **Set up** → Touch ID →
+   "Turn on Touch ID unlock" → **Turn on** → Touch ID → the city list (each prompt starts from its own tap); the
+   button top right says **Lock**. `localStorage["cw:unlock"]` exists and contains no `github_pat_`;
+   `sessionStorage` contains no `github_pat_`.
 2. **Reload:** expected: the start screen shows **Unlock with Touch ID**, **Use a token instead** and **Forget this
    device**; the token form is hidden.
 3. **Unlock:** tap **Unlock with Touch ID**, one touch. Expected: the city list.
-4. **Cancel Touch ID:** reload, tap **Unlock with Touch ID** and cancel the prompt. Expected: "Unlock cancelled.";
-   the three buttons are still there and `cw:unlock` is unchanged. Unlocking again works.
+4. **Cancel Touch ID:** reload, tap **Unlock with Touch ID** and cancel the prompt. Expected: "Unlock
+   cancelled. If you deleted the passkey, choose Forget this device."; the three buttons are still there and
+   `cw:unlock` is unchanged. Unlocking again works.
 5. **Lock:** tap **Lock** (with an unsaved change, you're asked first). Expected: the start screen with **Unlock
    with Touch ID**.
 6. **Idle lock:** for a quick check, change the 60-minute limit in `admin.js` to 1 minute in a local copy only
@@ -218,20 +233,25 @@ Open the browser's developer tools to look at storage (Storage / Application →
    without activity." Without Touch ID unlock: signed out with "Signed out after 60 minutes without activity."
 7. **Token expired:** revoke the token on GitHub, then unlock. Expected: the token form with "Your token expired or
    was replaced. Paste a new one; Touch ID unlock stays set up."; `cw:unlock` still has `credentialId` and `salt`
-   but no `iv` / `ciphertext`. Paste a new token → one Touch ID touch (no new passkey) → the city list. Reload →
-   unlock works with the new token.
+   but no `iv` / `ciphertext`. Paste a new token → "Encrypt this token with Touch ID?" → **Encrypt with Touch
+   ID** → one Touch ID touch (no new passkey) → the city list. (**Not now** keeps the token in memory only.)
+   Reload → unlock works with the new token.
 8. **Passkey deleted elsewhere:** delete the passkey in the Passwords app, then reload and unlock. The browser
-   reports this like a cancel. Expected: "Unlock cancelled." and **Use a token instead** and **Forget this
-   device** stay visible, so you're never stuck.
+   reports this like a cancel. Expected: "Unlock cancelled. If you deleted the passkey, choose Forget this
+   device." and **Use a token instead** and **Forget this device** stay visible, so you're never stuck.
 9. **Forget:** tap **Forget this device** (start screen, or below the token info in the city list) → confirm.
    Expected: `cw:unlock` is gone; a dialog explains how to delete the passkey (Passwords app → search the site's
    address → delete); then the token form.
 10. **Old plain-text token:** in the console run `localStorage.setItem("cw:auth","{}")`, then reload. Expected:
     "A token saved by an older version of the editor was removed from this browser." and `cw:auth` is gone. Do this
     once in a browser with Touch ID unlock and once in one without.
-11. **Browser without PRF:** (e.g. an older browser) expected: the token form only, no offer to set up Touch ID and
-    no "remember" option; after signing in the button top right says **Sign out**; a reload in the same tab signs
-    in again from `sessionStorage`; a new tab asks for the token.
+11. **Browser without PRF:** (e.g. an older browser) expected: the token form only, no "remember" option. If the
+    browser reports up front that it can't do passkeys with PRF, there's no offer to set up Touch ID. If it only
+    turns out while creating the passkey (**Set up** → Touch ID), expected: "This browser can't protect the token
+    with a passkey; you'll need to paste it again next time."; no `cw:unlock`; the new passkey is forgotten
+    (delete it in the Passwords app if it's still listed); `localStorage["cw:noprf"]` is `"1"`, and the offer
+    doesn't come back in this browser. Either way, after signing in the button top right says **Sign out**; a
+    reload in the same tab signs in again from `sessionStorage`; a new tab asks for the token.
 
 ## Security
 

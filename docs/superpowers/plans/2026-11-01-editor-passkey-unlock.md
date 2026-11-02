@@ -108,9 +108,8 @@ query is repeated once per language. Both fixes go in `politeFetch` in `build.mj
 
 - [ ] **Step 2c: Implement both in `politeFetch`.** Run: `node --test` → all 14 pass.
 
-- [ ] **Step 2d: Measure.** Run the full build once locally with per-host timing (harness:
-  `/private/tmp/claude-501/-Users-pieterwittebol-Documents-Projects-City-Walks/4b0754ed-ac22-4b1d-a01a-a04e82947630/scratchpad/tools/measure.mjs <repo-copy>`,
-  on a `git archive` copy, with `BUILD_BUDGET_MIN=60` so the budget doesn't hide the effect). Report total time
+- [ ] **Step 2d: Measure.** Run the full build once locally with a per-host timing harness (local, not in the repo),
+  on a `git archive` copy, with `BUILD_BUDGET_MIN=60` so the budget doesn't hide the effect. Report total time
   and Overpass time against the baseline (62 min / ~49 min Overpass).
 
 - [ ] **Step 3: Commit (code and docs separately)**
