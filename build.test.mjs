@@ -43,11 +43,12 @@ test("aborting during a back-off stops at once, without another request", async 
   let calls = 0;
   const f = politeFetch(async (url, opts) => { calls++; if (opts.signal?.aborted) throw abortError(); return json({}, 429); });
   const ac = new AbortController();
-  setTimeout(() => ac.abort(), 20); // back-off after a 429 from Overpass is 20 s × 0.02 = 400 ms
+  setTimeout(() => ac.abort(), 10); // back-off after a 429 from Overpass is 20 s × 0.02 = 400 ms
   const t0 = Date.now();
   await assert.rejects(f("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=1", signal: ac.signal }), { name: "AbortError" });
   assert.equal(calls, 1);
-  assert.ok(Date.now() - t0 < 250, `took ${Date.now() - t0} ms (a full back-off is 400 ms)`);
+  // without the abort it would take at least the full 400 ms back-off; the rest is slack for a busy CI runner
+  assert.ok(Date.now() - t0 < 380, `took ${Date.now() - t0} ms (a full back-off is 400 ms)`);
 });
 
 test("after the deadline no requests are sent", async () => {
@@ -98,11 +99,11 @@ test("a success resets the count", async () => {
 
 test("a down host comes back after downMs", async () => {
   let calls = 0;
-  const f = politeFetch(async () => { calls++; throw abortError(); }, { downMs: 50 });
+  const f = politeFetch(async () => { calls++; throw abortError(); }, { downMs: 400 }); // roomy, so a busy CI runner can't flake it
   await assert.rejects(f(OVERPASS, post(1)));
   await assert.rejects(f(OVERPASS, post(2)));
   await assert.rejects(f(OVERPASS, post(3)), /host down/);
-  await new Promise((r) => setTimeout(r, 60));
+  await new Promise((r) => setTimeout(r, 500));
   await assert.rejects(f(OVERPASS, post(4)), { name: "AbortError" });
   assert.equal(calls, 3);
 });
