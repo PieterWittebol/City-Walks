@@ -327,6 +327,24 @@ test("when the first Overpass server is down but another answers, every walk is 
   for (const k of ["x/one", "x/two"]) assert.deepEqual(Object.keys(index.walks[k].files).sort(), ["de", "en", "fr", "nl"], k);
 });
 
+test("with an OpenStreetMap extract, Overpass questions are answered locally and no Overpass server is asked", async () => {
+  const root = fixtureRoot({ wiki: true });
+  const osmFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "cw-osm-")), "osm.geojsonseq");
+  const pt = (id, lon, lat, tags) => JSON.stringify({ type: "Feature", geometry: { type: "Point", coordinates: [lon, lat] }, properties: { "@type": "node", "@id": id, ...tags } });
+  fs.writeFileSync(osmFile, [pt(1, 3.7262, 51.0552, { tourism: "artwork", artwork_type: "mural", name: "A mural" }),
+    pt(2, 2.6, 49.6, { tourism: "artwork" })].join("\n") + "\n");
+  const osmBoundary = path.join(path.dirname(osmFile), "area.poly");
+  fs.writeFileSync(osmBoundary, "belgium\n1\n 2.5 49.5\n 6.4 49.5\n 6.4 51.5\n 2.5 51.5\nEND\nEND\n");
+  const counter = { overpass: 0 };
+  const noOverpass = openData(() => { throw abortError(); }, counter); // every public Overpass server is down
+  const out = tmpOut();
+  const { stats } = await run({ root, out, mode: "full", fetchImpl: noOverpass, previous: { index: null }, cacheFile: null, osmFile, osmBoundary });
+  assert.equal(counter.overpass, 0);
+  assert.ok(stats.osmLocal > 0, `answered locally: ${stats.osmLocal}`);
+  const index = readJSON(out, "built", "index.json");
+  for (const k of ["x/one", "x/two"]) assert.deepEqual(Object.keys(index.walks[k].files).sort(), ["de", "en", "fr", "nl"], k);
+});
+
 test("a walk the deadline cuts off halfway isn't published from that run; the previous version is kept", async () => {
   const root = fixtureRoot({ wiki: true });
   const out1 = tmpOut();

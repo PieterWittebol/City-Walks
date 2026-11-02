@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
+import { loadOsmExtract, answerOverpass } from "./osm-local.mjs";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(ROOT, process.env.OUT_DIR || "_site");
@@ -245,11 +246,25 @@ export async function run({
   budgetMs = envMinutes("BUILD_BUDGET_MIN", 20 * 60e3), graceMs = envMinutes("BUILD_GRACE_MIN", 5 * 60e3),
   cacheFile = process.env.HTTP_CACHE ? path.resolve(process.env.HTTP_CACHE) : null,
   cacheMaxAgeMs = envMinutes("HTTP_CACHE_MAX_AGE_MIN", 8 * 24 * 60 * 60e3),
+  osmFile = process.env.OSM_EXTRACT ? path.resolve(process.env.OSM_EXTRACT) : null,
+  osmBoundary = process.env.OSM_BOUNDARY ? path.resolve(process.env.OSM_BOUNDARY) : null,
 } = {}) {
   const t0 = Date.now(), summary = [];
   const overBudget = () => Date.now() - t0 >= budgetMs;
   const pf = politeFetch(fetchImpl, { deadline: t0 + budgetMs + graceMs, cacheFile, maxAgeMs: cacheMaxAgeMs });
-  const W = loadModules(pf, root);
+  // OpenStreetMap extract (Geofabrik): Overpass questions it can answer never reach the public Overpass servers
+  const osm = osmFile && osmBoundary ? loadOsmExtract(osmFile, osmBoundary) : null;
+  if (osmFile) console.log(osm ? `OpenStreetMap extract: ${osm.els.length} objects` : `OpenStreetMap extract ${osmFile} not usable; asking Overpass`);
+  pf.stats.osmLocal = 0;
+  const OVERPASS_URL = /^https:\/\/(overpass-api\.de|overpass\.private\.coffee|maps\.mail\.ru|overpass\.kumi\.systems)\//;
+  const fetchLocalFirst = async (url, opts = {}) => {
+    if (osm && OVERPASS_URL.test(url) && typeof opts.body === "string") {
+      const els = answerOverpass(osm, new URLSearchParams(opts.body).get("data") || "");
+      if (els) { pf.stats.osmLocal++; return new Response(JSON.stringify({ elements: els }), { status: 200, headers: { "content-type": "application/json" } }); }
+    }
+    return pf(url, opts);
+  };
+  const W = loadModules(fetchLocalFirst, root);
   const { Util, Schema, Builder, Sources } = W;
   // Overpass not answering at all leaves out murals' positions and the sights along the way. Builder looks up
   // Sources.overpass at call time, so this wrapper counts it (walks are built one at a time, so a counter is enough).
@@ -361,7 +376,7 @@ export async function run({
 
   // 4. report
   const secs = Math.round((Date.now() - t0) / 1000);
-  const md = [`### City Walks data build (${mode})`, "", `${pf.stats.requests} requests to open data services, ${pf.stats.cached} answered from cache${pf.stats.refused ? `, ${pf.stats.refused} not sent (time budget or service down)` : ""}, ${secs} s${overBudget() ? " (time budget used up)" : ""}. Onroerend Erfgoed texts added: ${oeEnrich ? oeCount : "off"}.`,
+  const md = [`### City Walks data build (${mode})`, "", `${pf.stats.requests} requests to open data services, ${pf.stats.cached} answered from cache${osm ? `, ${pf.stats.osmLocal} OpenStreetMap questions answered from the Geofabrik extract` : ""}${pf.stats.refused ? `, ${pf.stats.refused} not sent (time budget or service down)` : ""}, ${secs} s${overBudget() ? " (time budget used up)" : ""}. Onroerend Erfgoed texts added: ${oeEnrich ? oeCount : "off"}.`,
     ...(pf.stats.down.length ? ["", `Skipped as down: ${pf.stats.down.join(", ")}.`] : []), "",
     "| Walk | Languages | Stops | Positions | Route | Turn-by-turn | Time |", "|---|---|---|---|---|---|---|",
     ...summary.map((r) => `| ${r.key} | ${r.langs.join(", ") || "❌ failed"}${r.reused ? ` (${r.reused} reused)` : ""}${r.skipped ? ` (${r.skipped} skipped)` : ""} | ${r.stops} | ${r.placed || "–"} | ${r.km ? r.km.toFixed(1) + " km" : "–"} | ${r.turns || (r.reused ? "reused" : "–")} | ${r.secs} s |`),

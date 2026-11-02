@@ -59,6 +59,11 @@ open data services are kept between runs and reused for up to 8 days after an ed
 everything fresh. An OpenStreetMap search server (Overpass) that keeps timing out is skipped for 10 minutes, and
 gets another chance before the retry round.
 
+OpenStreetMap questions (artworks, places linked to Wikipedia/Wikidata) don't go to the public Overpass servers at
+all when possible: once a day the build downloads the OpenStreetMap data for Belgium from
+[Geofabrik](https://download.geofabrik.de/europe/belgium.html), keeps only those objects (with `osmium`) and
+answers from that. Places outside Belgium, or a day when the download fails, still use Overpass as before.
+
 ### One-time setup
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
@@ -73,7 +78,7 @@ secrets and only GitHub's own actions, pinned to exact versions.
 
 | Source | Used for | Licence |
 |---|---|---|
-| [OpenStreetMap](https://www.openstreetmap.org/) (tiles, Overpass API) | Map, positions of murals and artworks, street art walks, sights along the way | ODbL |
+| [OpenStreetMap](https://www.openstreetmap.org/) (tiles, Overpass API, [Geofabrik](https://download.geofabrik.de/) extract for the build) | Map, positions of murals and artworks, street art walks, sights along the way | ODbL |
 | [Wikidata](https://www.wikidata.org/) (Query Service + API) | "Highlights" walks (notable heritage near a point), linking places to articles | CC0 |
 | [Wikipedia](https://www.wikipedia.org/) (REST + geosearch) | Texts, photos and precise coordinates, in English, Dutch, French or German | CC BY-SA |
 | [Wikimedia Commons](https://commons.wikimedia.org/) | Photos | various free licences |
@@ -92,10 +97,11 @@ Not used on purpose: Street Art Cities' data. Its terms don't allow reuse in an 
 | `util.js`, `sources.js`, `schema.js`, `app.js`, `app.css` | The app; `sources.js` holds all open data access, `schema.js` the file format rules |
 | `admin.html`, `admin.js`, `admin.css` | The editor |
 | `unlock.js` | Editor: Touch ID (passkey) unlock; keeps the token in this browser only encrypted |
-| `build.test.mjs`, `unlock.test.mjs` | Tests for the build and the unlock helpers (`node --test`) |
+| `build.test.mjs`, `osm-local.test.mjs`, `unlock.test.mjs` | Tests for the build, the local OpenStreetMap answers and the unlock helpers (`node --test`) |
 | `builder.js` | Builds a walk from open data (used by the app and the build) |
 | `nav.js` | Turn-by-turn navigation: position on the route, next manoeuvre, wording in EN/NL/FR/DE |
 | `build.mjs`, `.github/workflows/build.yml` | The GitHub build that prepares the data |
+| `osm-local.mjs` | Answers the build's OpenStreetMap questions from the daily Geofabrik extract (not published) |
 | `leaflet.js`, `leaflet.css` | Map library (Leaflet 1.9.4, BSD-2), kept in the repo so no CDN is needed |
 | `sw.js` | Service worker: offline use, caches map tiles you've already seen |
 | `manifest.webmanifest`, `icon*` | Home-screen name and icon |

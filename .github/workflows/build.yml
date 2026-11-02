@@ -28,6 +28,48 @@ jobs:
           persist-credentials: false
       - name: Test the build script
         run: node --test
+      # OpenStreetMap data for Belgium from Geofabrik, fetched at most once a day: the build answers its
+      # OpenStreetMap questions from it instead of the busy public Overpass servers.
+      # If any of this fails, the build simply asks the public Overpass servers, as before.
+      - name: Note today's date
+        id: day
+        run: echo "day=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - name: Restore today's OpenStreetMap extract
+        id: osm
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/osm-belgium.geojsonseq
+            .cache/osm-belgium.poly
+          key: osm-belgium-${{ steps.day.outputs.day }}
+      - name: Download and filter OpenStreetMap data for Belgium (Geofabrik)
+        if: steps.osm.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          UA: "CityWalks/1.0 (https://github.com/${{ github.repository }}; walk data build)"
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends osmium-tool
+          curl -fsSL --retry 3 -A "$UA" -o "$RUNNER_TEMP/belgium.osm.pbf" https://download.geofabrik.de/europe/belgium-latest.osm.pbf
+          osmium tags-filter -O -o "$RUNNER_TEMP/wanted.osm.pbf" "$RUNNER_TEMP/belgium.osm.pbf" nwr/tourism=artwork nwr/wikipedia nwr/wikidata
+          osmium export -O -f geojsonseq -x print_record_separator=false --attributes=type,id -o "$RUNNER_TEMP/all.geojsonseq" "$RUNNER_TEMP/wanted.osm.pbf"
+          # osmium also writes the objects it needed for geometry; keep only the ones the build asks about
+          grep -E '"(wikipedia|wikidata)":|"tourism":"artwork"' "$RUNNER_TEMP/all.geojsonseq" > "$RUNNER_TEMP/osm.geojsonseq"
+          # the extract's boundary: only questions about places inside it are answered from the extract
+          curl -fsSL --retry 3 -A "$UA" -o "$RUNNER_TEMP/osm.poly" https://download.geofabrik.de/europe/belgium.poly
+          mkdir -p .cache
+          mv "$RUNNER_TEMP/osm.poly" .cache/osm-belgium.poly
+          mv "$RUNNER_TEMP/osm.geojsonseq" .cache/osm-belgium.geojsonseq
+          ls -l .cache/osm-belgium.*
+      - name: Save today's OpenStreetMap extract
+        if: ${{ steps.osm.outputs.cache-hit != 'true' && hashFiles('.cache/osm-belgium.geojsonseq') != '' && hashFiles('.cache/osm-belgium.poly') != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .cache/osm-belgium.geojsonseq
+            .cache/osm-belgium.poly
+          key: osm-belgium-${{ steps.day.outputs.day }}
       # Answers from the open data services are kept between runs, so a run after an edit
       # doesn't have to ask Wikipedia, OpenStreetMap etc. everything again.
       - name: Restore saved open data answers
@@ -42,6 +84,8 @@ jobs:
           BUILD_MODE: ${{ github.event_name == 'push' && 'incremental' || 'full' }}
           BUILD_BUDGET_MIN: "20"
           HTTP_CACHE: .cache/http-cache.json
+          OSM_EXTRACT: .cache/osm-belgium.geojsonseq
+          OSM_BOUNDARY: .cache/osm-belgium.poly
           # After an edit: reuse answers up to 8 days old. Mondays and manual runs: ask everything fresh.
           HTTP_CACHE_MAX_AGE_MIN: ${{ github.event_name == 'push' && '11520' || '0' }}
       - name: Save open data answers for the next run
