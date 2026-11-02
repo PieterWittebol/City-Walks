@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111111">
+<meta name="cw-repo" content="PieterWittebol/City-Walks">
 <title>City Walks · Editor</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="leaflet.css">
@@ -25,11 +26,10 @@
 <main id="vLogin" class="view">
   <section class="card">
     <h1>Editor</h1>
+    <div id="tokenForm">
     <p>Changes are saved straight to your GitHub repository. To sign in you need a <b>fine-grained personal access token</b> that can only edit this one repository.</p>
     <label>Repository <span class="small">(owner/name)</span><input id="inRepo" autocomplete="off" spellcheck="false" placeholder="owner/repository"></label>
     <label>Token<input id="inToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
-    <label class="chk"><input type="checkbox" id="inRemember"> Remember on this device</label>
-    <p id="rememberWarn" class="warn hidden">The token is then kept in this browser's storage, which every site under the same github.io address can read. Only use this on your own device and if you don't publish other sites with third-party scripts under this GitHub account.</p>
     <button id="btnLogin" class="primary">Sign in</button>
     <p id="loginMsg" class="msg"></p>
     <details>
@@ -43,12 +43,20 @@
       </ol>
       <p class="small">The token never leaves your browser except to talk to api.github.com. This editor can only change <code>cities.json</code> and <code>walk-*.json</code>, never the app's code.</p>
     </details>
+    </div>
+    <div id="unlockBox" class="hidden">
+      <p id="unlockIntro">Your token is stored in this browser, encrypted. Unlock it with Touch ID (your passkey).</p>
+      <button id="btnUnlock" class="primary">Unlock with Touch ID</button>
+      <p id="unlockMsg" class="msg"></p>
+      <div class="row"><button id="btnUseToken">Use a token instead</button><button id="btnForget" class="danger">Forget this device</button></div>
+    </div>
   </section>
 </main>
 
 <!-- 2. Cities and walks -->
 <main id="vHome" class="view hidden">
   <div id="tokenInfo" class="note"></div>
+  <button id="btnForgetHome" class="mini hidden">Forget this device</button>
   <div id="cities"></div>
   <div class="row">
     <button id="btnAddCity">＋ City</button>
@@ -145,6 +153,7 @@
 <script src="util.js"></script>
 <script src="sources.js"></script>
 <script src="schema.js"></script>
+<script src="unlock.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

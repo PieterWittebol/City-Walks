@@ -91,6 +91,8 @@ Not used on purpose: Street Art Cities' data. Its terms don't allow reuse in an 
 | `index.html` | The page (no inline scripts; includes the Content Security Policy) |
 | `util.js`, `sources.js`, `schema.js`, `app.js`, `app.css` | The app; `sources.js` holds all open data access, `schema.js` the file format rules |
 | `admin.html`, `admin.js`, `admin.css` | The editor |
+| `unlock.js` | Editor: Touch ID (passkey) unlock; keeps the token in this browser only encrypted |
+| `build.test.mjs`, `unlock.test.mjs` | Tests for the build and the unlock helpers (`node --test`) |
 | `builder.js` | Builds a walk from open data (used by the app and the build) |
 | `nav.js` | Turn-by-turn navigation: position on the route, next manoeuvre, wording in EN/NL/FR/DE |
 | `build.mjs`, `.github/workflows/build.yml` | The GitHub build that prepares the data |
@@ -114,12 +116,20 @@ GitHub → Settings → Developer settings → Fine-grained tokens → Generate 
 *Only select repositories*: this one → *Repository permissions → Contents: Read and write* (nothing else) →
 expiration 30–90 days.
 
+**Unlock with Touch ID:** after you sign in with the token, the editor offers to set up a passkey (Touch ID, or
+your device's passkey). The token is then stored in this browser only encrypted, with a key that only exists after
+a successful Touch ID check. Next time, tap **Unlock with Touch ID** instead of pasting the token. **Lock** (top
+right) wipes the token from memory; **Forget this device** removes the encrypted token. When the token expires or
+is revoked, paste a new one: it's encrypted with the same passkey (one touch). Browsers without passkey PRF support
+work as before: paste the token each time; it's kept for that tab only.
+
 How the editor stays safe:
 
 - Only fine-grained tokens are accepted; classic tokens (`ghp_…`, access to all repositories) are refused.
-- The token is kept for this browser tab only (sessionStorage) and you're signed out after 60 minutes of
-  inactivity. "Remember on this device" is opt-in, with a warning: all sites under `<you>.github.io` share
-  browser storage.
+- The token is stored only encrypted; unlocking needs your passkey (Touch ID). Without Touch ID unlock it's kept
+  for this browser tab only (sessionStorage). It's never stored in plain text in the browser's long-term storage;
+  a plain-text token saved by an older version of the editor is deleted on first load.
+- The editor locks (Touch ID unlock) or signs out after 60 minutes of inactivity.
 - The token is only ever sent to `api.github.com`; the page's CSP blocks any other destination for it.
 - The editor can only read and write `cities.json` and `walk-*.json`, never the app's code.
 - Everything is checked with the same rules the app uses (`schema.js`) before it's saved; changes use the
@@ -187,6 +197,42 @@ or via ☰ → Refresh walk data.
 ☰ → Debug log → **Test data sources** checks every open data service from the phone. **Copy log** gives you
 something to paste into a chat or issue. The log contains GPS positions, so share it privately.
 
+## Manual checks (editor)
+
+WebAuthn can't run in the automated tests, so check the editor's sign-in by hand after changing `admin.js`,
+`admin.html` or `unlock.js`, in Safari and Firefox on macOS (Touch ID), with a real fine-grained token.
+Open the browser's developer tools to look at storage (Storage / Application → Local and Session storage).
+
+1. **Enable:** sign in with the token. Expected: "Unlock with Touch ID next time?" → **Set up** → two Touch ID
+   prompts → the city list; the button top right says **Lock**. `localStorage["cw:unlock"]` exists and contains no
+   `github_pat_`; `sessionStorage` contains no `github_pat_`.
+2. **Reload:** expected: the start screen shows **Unlock with Touch ID**, **Use a token instead** and **Forget this
+   device**; the token form is hidden.
+3. **Unlock:** tap **Unlock with Touch ID**, one touch. Expected: the city list.
+4. **Cancel Touch ID:** reload, tap **Unlock with Touch ID** and cancel the prompt. Expected: "Unlock cancelled.";
+   the three buttons are still there and `cw:unlock` is unchanged. Unlocking again works.
+5. **Lock:** tap **Lock** (with an unsaved change, you're asked first). Expected: the start screen with **Unlock
+   with Touch ID**.
+6. **Idle lock:** for a quick check, change the 60-minute limit in `admin.js` to 1 minute in a local copy only
+   (never commit that), wait 2 minutes without touching the page. Expected: locked, with "Locked after 60 minutes
+   without activity." Without Touch ID unlock: signed out with "Signed out after 60 minutes without activity."
+7. **Token expired:** revoke the token on GitHub, then unlock. Expected: the token form with "Your token expired or
+   was replaced. Paste a new one; Touch ID unlock stays set up."; `cw:unlock` still has `credentialId` and `salt`
+   but no `iv` / `ciphertext`. Paste a new token → one Touch ID touch (no new passkey) → the city list. Reload →
+   unlock works with the new token.
+8. **Passkey deleted elsewhere:** delete the passkey in the Passwords app, then reload and unlock. The browser
+   reports this like a cancel. Expected: "Unlock cancelled." and **Use a token instead** and **Forget this
+   device** stay visible, so you're never stuck.
+9. **Forget:** tap **Forget this device** (start screen, or below the token info in the city list) → confirm.
+   Expected: `cw:unlock` is gone; a dialog explains how to delete the passkey (Passwords app → search the site's
+   address → delete); then the token form.
+10. **Old plain-text token:** in the console run `localStorage.setItem("cw:auth","{}")`, then reload. Expected:
+    "A token saved by an older version of the editor was removed from this browser." and `cw:auth` is gone. Do this
+    once in a browser with Touch ID unlock and once in one without.
+11. **Browser without PRF:** (e.g. an older browser) expected: the token form only, no offer to set up Touch ID and
+    no "remember" option; after signing in the button top right says **Sign out**; a reload in the same tab signs
+    in again from `sessionStorage`; a new tab asks for the token.
+
 ## Security
 
 The repository and the site are public, so:
@@ -199,9 +245,9 @@ The repository and the site are public, so:
 - **Content Security Policy:** scripts only from this site, no inline scripts, frames or plugins. The network is
   limited to the services in the table above. Requests are sent without cookies.
 - **No tracking, accounts or server.** Progress, settings and the debug log stay on the phone.
-- **Write access means your GitHub account.** Use two-factor authentication. If a future editor page needs a token,
-  use a fine-grained token for this one repository with only "Contents: read and write", a short expiry, and
-  store it only in your own browser.
+- **Write access means your GitHub account.** Use two-factor authentication. The editor's token is a fine-grained
+  token for this one repository with only "Contents: read and write" and a short expiry. It's stored only
+  encrypted; unlocking needs your passkey (or it's kept for one browser tab only).
 
 ## Credits
 

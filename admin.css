@@ -65,3 +65,7 @@ code{background:#eee;border-radius:4px;padding:0 4px;font-size:12px}
 button.out{background:transparent;color:var(--y);border:1px solid var(--y);padding:5px 10px;font-size:13px}
 .mlfield details.trans{margin:-4px 0 8px;padding-left:8px;border-left:3px solid #eee}
 .mlfield summary{font-size:13px;color:var(--blue)}
+#unlockBox{margin-top:14px}
+#btnUnlock{width:100%;margin-top:4px}
+#tokenForm:not(.hidden)+#unlockBox{border-top:1px solid #eee;padding-top:6px}
+#btnForgetHome{margin:-4px 0 12px}

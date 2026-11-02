@@ -1,7 +1,9 @@
 /* City Walks editor. Edits cities.json and walk-*.json in the GitHub repository through the GitHub API.
  * Security:
  * - Only fine-grained personal access tokens (github_pat_…) are accepted; classic tokens are refused.
- * - The token is kept in memory + sessionStorage (cleared when the tab closes) unless the user opts in to remember it.
+ * - With Touch ID unlock (unlock.js) the token is stored only encrypted (passkey PRF + AES-GCM) and kept in memory
+ *   while unlocked. Without it, the token is kept in memory + sessionStorage (cleared when the tab closes).
+ *   It is never stored in plain text in localStorage; a plain-text token from an older version is deleted on load.
  * - The token is only ever sent to api.github.com (also enforced by the CSP in admin.html).
  * - Only cities.json and walk-*.json can be read or written; the app's code can't be changed from here.
  * - Everything is validated with the same rules the app uses (schema.js) before it is saved.
@@ -11,13 +13,12 @@
 if (window.top !== window.self) { document.documentElement.replaceChildren(); return; } // no clickjacking
 document.body.classList.remove("locked");
 
-const U = window.Util, Src = window.Sources, SC = window.Schema;
+const U = window.Util, Src = window.Sources, SC = window.Schema, UL = window.Unlock;
 const { str, okLat, okLon, norm, fetchJSON } = U;
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); n.append(...kids.filter((k) => k != null)); return n; };
 const PATH_OK = (p) => /^(cities\.json|walk-[a-z0-9-]+\.json)$/.test(p);
-const REPO_RE = /^[A-Za-z0-9-]{1,39}\/[A-Za-z0-9._-]{1,100}$/;
-const TOKEN_RE = /^github_pat_[A-Za-z0-9_]{20,255}$/;
+const { REPO_RE, TOKEN_RE } = UL;
 const slug = (s) => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "item";
 const round6 = (v) => Math.round(v * 1e6) / 1e6;
 const list = (s) => String(s || "").split(",").map((x) => x.trim()).filter(Boolean);
@@ -44,23 +45,33 @@ function dialog(title, body, buttons) {
 const confirmDlg = (title, text, ok = "OK", cls = "primary") => dialog(title, text, [{ label: "Cancel", value: false }, { label: ok, value: true, cls }]);
 
 // ---------- authentication ----------
+// cw:auth: plain-text token, sessionStorage only and only without Touch ID unlock. cw:unlock: the encrypted record.
 const TK = "cw:auth";
-let auth = null, remember = false, lastActive = Date.now();
+let auth = null, lastActive = Date.now(), oldTokenRemoved = false;
+// A plain-text token "remembered" by an older version of the editor: delete it first thing, in every browser.
+try { if (localStorage.getItem(TK) !== null) { localStorage.removeItem(TK); oldTokenRemoved = true; } } catch {}
+const EXPIRED_MSG = "Your token expired or was replaced. Paste a new one; Touch ID unlock stays set up.";
+const readRecord = () => { try { return UL.parseRecord(localStorage.getItem(UL.KEY)); } catch { return null; } };
+const writeRecord = (r) => { try { localStorage.setItem(UL.KEY, JSON.stringify(r)); return true; } catch { return false; } };
+const unlockOn = () => !!readRecord();   // Touch ID unlock is set up in this browser
+const isCancel = (e) => e && e.name === "NotAllowedError";
 function loadAuth() {
-  try { const s = sessionStorage.getItem(TK); if (s) return JSON.parse(s); const l = localStorage.getItem(TK); if (l) { remember = true; return JSON.parse(l); } } catch {}
+  try { const s = sessionStorage.getItem(TK); if (s) return JSON.parse(s); } catch {}
   return null;
 }
+// With Touch ID unlock the token stays in memory only; otherwise it's kept for this tab (sessionStorage).
 function storeAuth() {
-  try { sessionStorage.removeItem(TK); localStorage.removeItem(TK); (remember ? localStorage : sessionStorage).setItem(TK, JSON.stringify(auth)); } catch {}
+  try { sessionStorage.removeItem(TK); localStorage.removeItem(TK); if (auth && !unlockOn()) sessionStorage.setItem(TK, JSON.stringify(auth)); } catch {}
 }
+// Sign out / lock: wipe the token and reload the page (which wipes everything else in memory).
 function signOut(reason) {
   auth = null; try { sessionStorage.removeItem(TK); localStorage.removeItem(TK); } catch {}
   if (reason) try { sessionStorage.setItem("cw:msg", reason); } catch {}
   location.replace(location.pathname);
 }
-// Sign out after 60 minutes without activity (unless the user chose to be remembered).
+// Lock / sign out after 60 minutes without activity.
 ["pointerdown", "keydown"].forEach((ev) => addEventListener(ev, () => (lastActive = Date.now()), true));
-setInterval(() => { if (auth && !remember && Date.now() - lastActive > 60 * 60e3) signOut("Signed out after 60 minutes without activity."); }, 60e3);
+setInterval(() => { if (auth && Date.now() - lastActive > 60 * 60e3) signOut(unlockOn() ? "Locked after 60 minutes without activity." : "Signed out after 60 minutes without activity."); }, 60e3);
 
 function guessRepo() {
   const m = location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i);
@@ -110,9 +121,17 @@ async function deleteFile(path, sha, message) {
 }
 
 // ---------- sign in ----------
-$("inRepo").value = guessRepo();
-$("inRemember").onchange = () => $("rememberWarn").classList.toggle("hidden", !$("inRemember").checked);
-try { const m = sessionStorage.getItem("cw:msg"); if (m) { $("loginMsg").textContent = m; sessionStorage.removeItem("cw:msg"); } } catch {}
+$("inRepo").value = document.querySelector('meta[name="cw-repo"]')?.content || guessRepo();
+const say = (id, text, ok = false) => { const m = $(id); m.textContent = text || ""; m.className = ok ? "msg ok" : "msg"; };
+// Start screen: "unlock" (encrypted token stored), "token" (unlock + token form), "expired" (passkey kept, token
+// gone), "plain" (no Touch ID unlock in this browser).
+function startScreen(mode) {
+  const rec = mode !== "plain";
+  $("tokenForm").classList.toggle("hidden", mode === "unlock");
+  $("unlockBox").classList.toggle("hidden", !rec);
+  for (const id of ["unlockIntro", "btnUnlock", "btnUseToken"]) $(id).classList.toggle("hidden", mode === "expired" || (id === "btnUseToken" && mode === "token"));
+  say("unlockMsg", "");
+}
 async function connect(a) {
   auth = a;
   const { data, headers } = await gh("GET", "");
@@ -120,9 +139,39 @@ async function connect(a) {
   if (data.permissions && data.permissions.push === false) throw new Error("Your GitHub account can't write to this repository.");
   auth.exp = headers.get("github-authentication-token-expiration") || "";
   await loadCities();
-  storeAuth();
   showTokenInfo();
   show("vHome");
+}
+// Encrypts the signed-in token with the record's passkey (one Touch ID touch) and stores the record.
+async function sealInto(r) {
+  const key = await UL.deriveKey(await UL.prfSecret(r.credentialId, r.salt));
+  const { iv, ciphertext } = await UL.seal(key, { token: auth.token, repo: auth.repo }, r.credentialId);
+  if (!writeRecord({ v: 1, credentialId: r.credentialId, salt: r.salt, iv, ciphertext, repo: auth.repo, created: r.created })) throw new Error("This browser's storage isn't available.");
+}
+// After a token sign-in: re-encrypt with the existing passkey, or offer to set Touch ID unlock up.
+async function protectToken() {
+  const r = readRecord();
+  if (r) {
+    try { await sealInto(r); toast("Touch ID unlock now uses this token."); }
+    catch (e) { toast((isCancel(e) ? "Touch ID cancelled" : "Touch ID didn't work") + ": the token is kept in memory only, so you'll need to paste it again after a reload.", 7000); }
+    return;
+  }
+  if (!(await UL.supported())) return;
+  const yes = await dialog("Unlock with Touch ID next time?", [
+    "The token is then stored in this browser only encrypted; unlocking it needs your passkey (Touch ID). It's never kept in plain text.",
+    el("p", { className: "small", textContent: "Touch ID asks twice now: once to create the passkey, once to encrypt the token." }),
+  ], [{ label: "Not now", value: false }, { label: "Set up", value: true, cls: "primary" }]);
+  if (!yes) return;
+  let id = null;
+  try {
+    id = await UL.createPasskey("City Walks editor · " + auth.repo);
+    if (!id) { toast("This browser can't protect the token with a passkey; you'll need to paste it again next time.", 7000); return; }
+    await sealInto({ v: 1, credentialId: id, salt: UL.newSalt(), repo: auth.repo, created: Date.now() });
+    toast("Touch ID unlock is set up. Next time, tap Unlock with Touch ID.");
+  } catch (e) {
+    if (id) await UL.forgetPasskey(id);   // don't leave an unused passkey behind
+    toast(isCancel(e) ? "Touch ID setup cancelled." : "Touch ID setup didn't work: " + e.message, 7000);
+  }
 }
 $("btnLogin").onclick = async () => {
   const token = $("inToken").value.trim(), repo = $("inRepo").value.trim();
@@ -130,14 +179,54 @@ $("btnLogin").onclick = async () => {
   if (/^(ghp|gho|ghu|ghs|ghr)_/.test(token)) { msg.textContent = "That's a classic token, which can usually reach all your repositories. For safety this editor only accepts fine-grained tokens (they start with github_pat_). See 'How to create the token' below."; return; }
   if (!TOKEN_RE.test(token)) { msg.textContent = "This doesn't look like a fine-grained token (github_pat_…)."; return; }
   if (!REPO_RE.test(repo)) { msg.textContent = "Repository must look like owner/name."; return; }
-  remember = $("inRemember").checked;
   $("btnLogin").disabled = true; msg.textContent = "Checking…"; msg.className = "msg ok";
   try { await connect({ token, repo }); $("inToken").value = ""; }
-  catch (e) { auth = null; msg.className = "msg"; msg.textContent = e.message; }
+  catch (e) { auth = null; msg.className = "msg"; msg.textContent = e.message; return; }
   finally { $("btnLogin").disabled = false; }
+  msg.textContent = "";
+  await protectToken();
+  storeAuth(); showTokenInfo();
 };
 $("inToken").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnLogin").click(); });
 $("btnSignOut").onclick = async () => { if (await leaveOk()) signOut(); };
+
+$("btnUnlock").onclick = async () => {
+  const r = readRecord();
+  if (!r || !r.ciphertext) { startScreen(r ? "expired" : "plain"); if (r) say("loginMsg", EXPIRED_MSG); return; }
+  const expired = () => {   // keep the passkey (credentialId + salt), drop only the encrypted token
+    writeRecord({ v: 1, credentialId: r.credentialId, salt: r.salt, repo: r.repo, created: r.created });
+    startScreen("expired"); say("loginMsg", EXPIRED_MSG);
+  };
+  $("btnUnlock").disabled = true; say("unlockMsg", "Waiting for Touch ID…", true);
+  try {
+    let a;
+    try {
+      const key = await UL.deriveKey(await UL.prfSecret(r.credentialId, r.salt));
+      try { a = await UL.open(key, { iv: r.iv, ciphertext: r.ciphertext }, r.credentialId); } catch { expired(); return; }
+    } catch (e) {
+      say("unlockMsg", isCancel(e) ? "Unlock cancelled." : "Touch ID unlock didn't work in this browser" + (e.message === "no-prf" ? " (no passkey secret returned)." : ": " + e.message));
+      return;
+    }
+    say("unlockMsg", "Signing in…", true);
+    try { await connect({ token: a.token, repo: a.repo }); storeAuth(); say("unlockMsg", ""); }   // repo from the decrypted payload
+    catch (e) { auth = null; if (e.status === 401) expired(); else say("unlockMsg", e.message); }
+  } finally { $("btnUnlock").disabled = false; }
+};
+$("btnUseToken").onclick = () => { startScreen("token"); $("inToken").focus(); };
+// Forget: delete the encrypted record, hint the passkey manager, explain how to delete the passkey itself.
+async function forget() {
+  if (!(await confirmDlg("Forget this device", "Remove Touch ID unlock and the encrypted token from this browser? You'll need to paste a token next time.", "Forget", "danger"))) return false;
+  const r = readRecord();
+  try { localStorage.removeItem(UL.KEY); } catch {}
+  if (r) await UL.forgetPasskey(r.credentialId);
+  await dialog("Delete the passkey too", [
+    "The encrypted token was removed from this browser. The passkey itself stays in your passwords until you delete it:",
+    "Passwords app (or System Settings → Passwords) → search " + location.hostname + " → delete",
+  ], [{ label: "OK", value: 1, cls: "primary" }]);
+  return true;
+}
+$("btnForget").onclick = async () => { if (await forget()) { startScreen("plain"); say("loginMsg", ""); $("inToken").focus(); } };
+$("btnForgetHome").onclick = async () => { if ((await leaveOk()) && (await forget())) signOut("Touch ID unlock was removed from this browser. Paste a token to sign in."); };
 
 function showTokenInfo() {
   const n = $("tokenInfo"); let text = `Signed in to ${auth.repo} (branch ${auth.branch}).`, bad = false;
@@ -147,8 +236,11 @@ function showTokenInfo() {
     const days = Math.round((d - Date.now()) / 864e5);
     if (isFinite(days)) { text += ` Token expires in ${days} day${days === 1 ? "" : "s"}.`; if (days > 90) { text += "\n⚠ That's a long time; consider a shorter expiry."; bad = true; } }
   }
-  if (remember) text += "\nThe token is remembered on this device. Sign out to remove it.";
+  const on = unlockOn();
+  text += on ? "\nThe token is stored in this browser only encrypted; unlocking needs your passkey (Touch ID)." : "\nThe token is kept for this browser tab only.";
   n.textContent = text; n.classList.toggle("bad", bad);
+  $("btnSignOut").textContent = on ? "Lock" : "Sign out";
+  $("btnForgetHome").classList.toggle("hidden", !on);
   const l = $("lnkBuilds"); l.href = "https://github.com/" + auth.repo + "/actions"; l.classList.remove("hidden");
 }
 
@@ -554,11 +646,22 @@ $("btnDeleteWalk").onclick = async () => {
 
 // ---------- start ----------
 (async () => {
+  let note = "";
+  try { note = sessionStorage.getItem("cw:msg") || ""; sessionStorage.removeItem("cw:msg"); } catch {}
+  if (oldTokenRemoved) note = "A token saved by an older version of the editor was removed from this browser." + (note ? "\n" + note : "");
+  const r = readRecord();
+  if (r) {   // Touch ID unlock: never restore a plain-text session
+    try { sessionStorage.removeItem(TK); } catch {}
+    if (r.ciphertext) { startScreen("unlock"); say("unlockMsg", note, true); }
+    else { startScreen("expired"); say("loginMsg", EXPIRED_MSG + (note ? "\n" + note : "")); }
+    show("vLogin"); return;
+  }
+  startScreen("plain"); say("loginMsg", note, true);
   const a = loadAuth();
   if (a && TOKEN_RE.test(a.token || "") && REPO_RE.test(a.repo || "")) {
-    $("loginMsg").textContent = "Signing in…"; $("loginMsg").className = "msg ok";
-    try { await connect({ token: a.token, repo: a.repo }); return; }
-    catch (e) { auth = null; try { sessionStorage.removeItem(TK); localStorage.removeItem(TK); } catch {} $("loginMsg").className = "msg"; $("loginMsg").textContent = e.message; }
+    say("loginMsg", "Signing in…", true);
+    try { await connect({ token: a.token, repo: a.repo }); storeAuth(); say("loginMsg", ""); return; }
+    catch (e) { auth = null; try { sessionStorage.removeItem(TK); } catch {} say("loginMsg", e.message); }
   }
   show("vLogin");
 })();
