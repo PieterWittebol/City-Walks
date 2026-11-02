@@ -2,6 +2,7 @@
 // No network: every test passes its own fake fetch. Not published (build.mjs only copies site files).
 process.env.WAIT_SCALE = "0.02"; // 20 s Overpass back-off → 400 ms, 1.5 s Overpass spacing → 30 ms
 delete process.env.GITHUB_STEP_SUMMARY; // tests must not write to a real Actions summary
+process.env.RETRY_WAIT_MS = "0"; // no 60 s pause before the retry round
 const realLog = console.log;
 console.log = () => {}; // quiet: run() prints progress and ::warning:: lines
 process.on("exit", () => { console.log = realLog; });
@@ -209,16 +210,18 @@ test("Overpass answers that carry a runtime-error remark aren't kept for the nex
 
 // ---- run(): time budget ----
 
-// A small site: two hand-placed walks, plus the app's own modules.
-function fixtureRoot() {
+// A small site: two hand-placed walks (one in Ghent, two in Antwerp), plus the app's own modules.
+// wiki: stop A links to a Wikipedia article, so a walk counts as "online" even when Overpass doesn't answer.
+const TWO_LAT = "51.21";
+function fixtureRoot({ wiki = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "cw-root-"));
   for (const f of ["util.js", "sources.js", "schema.js", "builder.js"]) fs.copyFileSync(path.join(HERE, f), path.join(root, f));
-  const walk = (id, title) => ({ schema: 2, id, title, lang: "en", stops: [
-    { id: "a", title: "Stop A", lat: 51.0543, lon: 3.7253, fixed: true, text: "First stop." },
-    { id: "b", title: "Stop B", lat: 51.0560, lon: 3.7270, fixed: true, text: "Second stop." },
+  const walk = (id, title, lat, lon) => ({ schema: 2, id, title, lang: "en", stops: [
+    { id: "a", title: "Stop A", lat, lon, fixed: true, text: "First stop.", ...(wiki ? { wikipedia: "en:Stop A" } : {}) },
+    { id: "b", title: "Stop B", lat: lat + 0.0017, lon: lon + 0.0017, fixed: true, text: "Second stop." },
   ] });
-  fs.writeFileSync(path.join(root, "walk-x-one.json"), JSON.stringify(walk("one", "Walk one")));
-  fs.writeFileSync(path.join(root, "walk-x-two.json"), JSON.stringify(walk("two", "Walk two")));
+  fs.writeFileSync(path.join(root, "walk-x-one.json"), JSON.stringify(walk("one", "Walk one", 51.0543, 3.7253)));
+  fs.writeFileSync(path.join(root, "walk-x-two.json"), JSON.stringify(walk("two", "Walk two", 51.2194, 4.4025)));
   fs.writeFileSync(path.join(root, "cities.json"), JSON.stringify({ schema: 2, title: "Test", cities: [{ id: "x", name: "X", lat: 51.05, lon: 3.72, walks: [
     { id: "one", file: "walk-x-one.json", title: "Walk one" },
     { id: "two", file: "walk-x-two.json", title: "Walk two" },
@@ -233,6 +236,16 @@ function fakeOpenData(counter) {
     return json({}, 404);
   };
 }
+// Open data with a Wikipedia article for stop A; Overpass answers through the given function.
+function openData(overpass = () => json({ elements: [] }), counter = { overpass: 0 }) {
+  return async (url, opts = {}) => {
+    if (/overpass/.test(url)) { counter.overpass++; return overpass(url, opts); }
+    if (/wikipedia\.org\/api\/rest_v1\/page\/summary\/Stop_A$/.test(url)) return json({ title: "Stop A", extract: "About stop A." });
+    return json({}, 404);
+  };
+}
+const readJSON = (...p) => JSON.parse(fs.readFileSync(path.join(...p), "utf8"));
+const tmpOut = () => fs.mkdtempSync(path.join(os.tmpdir(), "cw-out-"));
 // Serves a previous build's output folder as if it were the published site.
 function publishedSite(out, fallback) {
   return async (url, opts) => {
@@ -275,4 +288,47 @@ test("the report shows how long each walk took", async () => {
   const { summary } = await run({ root, out, mode: "full", fetchImpl: fakeOpenData({ n: 0 }), previous: { index: null }, cacheFile: null });
   assert.equal(summary.length, 2);
   for (const row of summary) assert.equal(typeof row.secs, "number");
+});
+
+// ---- run(): incomplete walks aren't published ----
+
+test("a walk built while Overpass is unavailable isn't published from that run; the previous version is kept", async () => {
+  const root = fixtureRoot({ wiki: true });
+  const out1 = tmpOut();
+  await run({ root, out: out1, mode: "full", fetchImpl: openData(), previous: { index: null }, cacheFile: null });
+  const prevIndex = readJSON(out1, "built", "index.json");
+  assert.deepEqual(Object.keys(prevIndex.walks).sort(), ["x/one", "x/two"]);
+
+  // Overpass doesn't answer for walk two (in Antwerp); Wikipedia still does
+  const failTwo = openData((url, opts) => { if (decodeURIComponent(opts.body).includes(TWO_LAT)) throw abortError(); return json({ elements: [] }); });
+
+  const out2 = tmpOut(); // no previous build: walk two isn't published at all
+  await run({ root, out: out2, mode: "full", fetchImpl: failTwo, previous: { index: null }, cacheFile: null });
+  assert.deepEqual(Object.keys(readJSON(out2, "built", "index.json").walks), ["x/one"]);
+
+  const out3 = tmpOut(); // with a previous build: walk two keeps its published version
+  await run({ root, out: out3, mode: "full", cacheFile: null,
+    fetchImpl: publishedSite(out1, failTwo), previous: { index: prevIndex, base: "https://prev.example/" } });
+  const index = readJSON(out3, "built", "index.json");
+  assert.deepEqual(Object.keys(index.walks).sort(), ["x/one", "x/two"]);
+  for (const f of Object.values(index.walks["x/two"].files)) assert.equal(readJSON(out3, "built", f).builtAt, prevIndex.builtAt, f);
+  for (const f of Object.values(index.walks["x/one"].files)) assert.equal(readJSON(out3, "built", f).builtAt, index.builtAt, f);
+});
+
+test("a walk the deadline cuts off halfway isn't published from that run; the previous version is kept", async () => {
+  const root = fixtureRoot({ wiki: true });
+  const out1 = tmpOut();
+  await run({ root, out: out1, mode: "full", fetchImpl: openData(), previous: { index: null }, cacheFile: null });
+  const prevIndex = readJSON(out1, "built", "index.json");
+
+  // Overpass answers only after the deadline, so the walking route request after it is refused
+  const budgetMs = 1000, start = Date.now(), counter = { overpass: 0 };
+  const late = openData(async () => { await new Promise((r) => setTimeout(r, Math.max(0, start + budgetMs + 50 - Date.now()))); return json({ elements: [] }); }, counter);
+  const out2 = tmpOut();
+  await run({ root, out: out2, mode: "full", budgetMs, graceMs: 0, cacheFile: null,
+    fetchImpl: publishedSite(out1, late), previous: { index: prevIndex, base: "https://prev.example/" } });
+  assert.ok(counter.overpass > 0, "walk one was started before the budget ran out");
+  const index = readJSON(out2, "built", "index.json");
+  assert.deepEqual(Object.keys(index.walks).sort(), ["x/one", "x/two"]);
+  for (const k of ["x/one", "x/two"]) for (const f of Object.values(index.walks[k].files)) assert.equal(readJSON(out2, "built", f).builtAt, prevIndex.builtAt, f);
 });
