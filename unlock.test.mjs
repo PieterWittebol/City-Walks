@@ -134,8 +134,7 @@ const bytes = (x) => Array.from(new Uint8Array(x.buffer ?? x, x.byteOffset ?? 0,
 test("createPasskey asks for a user-verified passkey with PRF on this host", async () => {
   const calls = {};
   const { W } = loadWith({ navigator: fakeNav(calls, { create: () => cred({ enabled: true }) }) });
-  const id = await W.createPasskey("me");
-  assert.equal(id, W.b64uEnc(new Uint8Array(32).fill(5)));
+  assert.deepEqual(plain(await W.createPasskey("me")), { id: W.b64uEnc(new Uint8Array(32).fill(5)), prf: true });
   const pk = calls.create.publicKey;
   assert.equal(pk.rp.id, "localhost");
   assert.equal(pk.authenticatorSelection.userVerification, "required");
@@ -146,9 +145,17 @@ test("createPasskey asks for a user-verified passkey with PRF on this host", asy
   assert.equal(pk.challenge.length, 32);
 });
 
-test("createPasskey returns null when PRF isn't enabled", async () => {
-  const { W } = loadWith({ navigator: fakeNav({}, { create: () => cred({ enabled: false }) }) });
-  assert.equal(await W.createPasskey("me"), null);
+test("createPasskey returns the id with prf false when PRF isn't enabled, so the passkey can be forgotten", async () => {
+  const id = (W) => W.b64uEnc(new Uint8Array(32).fill(5));
+  for (const prfResult of [{ enabled: false }, undefined, {}]) {
+    const { W } = loadWith({ navigator: fakeNav({}, { create: () => cred(prfResult) }) });
+    assert.deepEqual(plain(await W.createPasskey("me")), { id: id(W), prf: false }, JSON.stringify(prfResult));
+  }
+});
+
+test("createPasskey rejects when no credential comes back", async () => {
+  const { W } = loadWith({ navigator: fakeNav({}, { create: () => null }) });
+  await assert.rejects(W.createPasskey("me"));
 });
 
 test("prfSecret sends the stored salt and credential", async () => {

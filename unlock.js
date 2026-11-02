@@ -74,7 +74,8 @@ async function supported() {
   } catch { return false; }
 }
 
-// Browser errors (e.g. NotAllowedError on cancel) propagate unchanged. Resolves to the credential id, or null without PRF.
+// Browser errors (e.g. NotAllowedError on cancel) propagate unchanged. Resolves to { id, prf }: prf is false when the
+// passkey can't give a secret (the caller should then forget the passkey and not offer setup again).
 async function createPasskey(userName) {
   const cred = await navigator.credentials.create({ publicKey: {
     rp: { id: location.hostname, name: "City Walks editor" },
@@ -84,8 +85,8 @@ async function createPasskey(userName) {
     authenticatorSelection: { userVerification: "required", residentKey: "preferred" },
     extensions: { prf: {} },
   } });
-  if (!cred || cred.getClientExtensionResults().prf?.enabled !== true) return null;
-  return b64uEnc(new Uint8Array(cred.rawId));
+  if (!cred) throw new Error("No passkey was created.");
+  return { id: b64uEnc(new Uint8Array(cred.rawId)), prf: cred.getClientExtensionResults().prf?.enabled === true };
 }
 
 async function prfSecret(credentialId, salt) {
