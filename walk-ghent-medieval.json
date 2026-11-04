@@ -55,20 +55,10 @@
     {
       "id": "werregaren",
       "title": "Werregarenstraat (graffiti street)",
-      "lat": 51.0549,
-      "lon": 3.7259,
+      "lat": 51.055048,
+      "lon": 3.724359,
       "wiki": [
         "werregaren"
-      ]
-    },
-    {
-      "id": "dulle-griet",
-      "title": "Dulle Griet",
-      "lat": 51.0566,
-      "lon": 3.7253,
-      "wiki": [
-        "dulle griet",
-        "groot kanon"
       ]
     },
     {
@@ -78,6 +68,16 @@
       "lon": 3.7265,
       "wiki": [
         "vrijdagmarkt"
+      ]
+    },
+    {
+      "id": "dulle-griet",
+      "title": "Dulle Griet",
+      "lat": 51.057293,
+      "lon": 3.724154,
+      "wiki": [
+        "dulle griet",
+        "groot kanon"
       ]
     },
     {
